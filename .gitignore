@@ -1,0 +1,17 @@
+# Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.vite/
+Frontend/.env
+Frontend/.env.*
+Frontend/server/database.sqlite
+
+# Backend .NET
+Backend/bin/
+Backend/obj/
+Backend/*.user
+Backend/.keys/
+
+# IDE and logs
+.vs/
+*.log

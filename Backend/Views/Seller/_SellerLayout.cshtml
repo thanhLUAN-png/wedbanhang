@@ -1,0 +1,22 @@
+@model WEDBANDOAN.Models.SellerPortalViewModel
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var pageTitles = new Dictionary<string, string> { ["Index"] = "Tổng quan", ["Products"] = "Sản phẩm", ["Shop"] = "Thông tin shop", ["Orders"] = "Quản lý đơn hàng", ["Analytics"] = "Thống kê đơn hàng", ["Finance"] = "Báo cáo tài chính", ["Promotions"] = "Khuyến mãi", ["Messages"] = "Tin nhắn", ["Settings"] = "Cài đặt" };
+    var title = pageTitles.TryGetValue(action, out var text) ? text : "Seller";
+    string Active(string target) => action == target ? "active" : "";
+    var shopLetter = string.IsNullOrWhiteSpace(Model.RestaurantName) || Model.RestaurantName == "0" ? "0" : Model.RestaurantName[..1].ToUpper();
+    var sellerLetter = string.IsNullOrWhiteSpace(Model.SellerName) || Model.SellerName == "0" ? "0" : Model.SellerName[..1].ToUpper();
+}
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>@title - ShopFoodVN Seller</title><link rel="stylesheet" href="~/css/seller.css" asp-append-version="true" /></head>
+<body class="seller-body"><div class="seller-shell">
+<aside class="seller-sidebar">
+ <a class="seller-brand" asp-action="Index"><span class="brand-icon">▣</span><span>ShopFoodVN Seller</span></a>
+ <section class="seller-shop"><span class="shop-letter">@shopLetter</span><div><b>@Model.RestaurantName</b><small>★ @Model.Rating.ToString("0.0")</small></div></section>
+ <nav class="seller-nav">
+  <a class="@Active("Index")" asp-action="Index"><i>▦</i>Tổng quan</a><a class="@Active("Orders")" asp-action="Orders"><i>♧</i>Quản lý đơn hàng</a><a class="@Active("Products")" asp-action="Products"><i>◇</i>Sản phẩm</a><a class="@Active("Shop")" asp-action="Shop"><i>▤</i>Thông tin shop</a><a class="@Active("Analytics")" asp-action="Analytics"><i>▥</i>Thống kê đơn hàng</a><a class="@Active("Finance")" asp-action="Finance"><i>＄</i>Báo cáo tài chính</a><a class="@Active("Promotions")" asp-action="Promotions"><i>♢</i>Khuyến mãi</a><a class="@Active("Messages")" asp-action="Messages"><i>□</i>Tin nhắn</a><a class="@Active("Settings")" asp-action="Settings"><i>⚙</i>Cài đặt</a>
+ </nav>
+ <section class="seller-user"><div class="seller-avatar">@sellerLetter</div><div><b>@Model.SellerName</b><small>@Model.Email</small></div><span class="logout">↪ Đăng xuất</span></section>
+</aside>
+<div class="seller-workspace"><header class="seller-topbar"><div></div><div class="top-account"><span class="bell">♧<em></em></span><span class="seller-avatar orange">@sellerLetter</span><b>@Model.SellerName</b></div></header><main class="seller-main">@RenderBody()</main></div>
+</div></body></html>

@@ -1,0 +1,7 @@
+@model WEDBANDOAN.Models.SellerPortalViewModel
+@{ Layout = "_SellerLayout"; }
+<section class="panel"><div class="panel-heading"><div><h2>Thực đơn @Model.RestaurantName</h2><p>@Model.ProductCount món lấy từ bảng MenuItems</p></div><button class="button muted" type="button">+ Thêm món (sẽ kết nối API)</button></div>
+<table><thead><tr><th>Mã món</th><th>Món ăn</th><th>Danh mục</th><th>Topping</th><th>Giá</th><th>Tồn kho</th><th>Trạng thái</th></tr></thead><tbody>
+@foreach (var item in Model.Products) { <tr><td>@item.Code</td><td><b>@item.Name</b></td><td>@item.Category</td><td class="toppings">@item.Toppings</td><td>@item.Price.ToString("N0") ₫</td><td>@item.StockQuantity</td><td><span class="badge">@item.Status</span></td></tr> }
+@if (!Model.Products.Any()) { <tr><td colspan="7" class="empty">0 sản phẩm</td></tr> }
+</tbody></table></section>

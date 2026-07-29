@@ -1,0 +1,4 @@
+@model WEDBANDOAN.Models.SellerPortalViewModel
+@{ Layout = "_SellerLayout"; }
+<section class="panel"><div class="panel-heading"><div><h2>Thông tin shop</h2><p>Dữ liệu quán mẫu số 1 từ database</p></div><button class="button muted" type="button">Chỉnh sửa (sẽ kết nối API)</button></div>
+<dl class="shop-info"><dt>Mã Seller</dt><dd>@Model.SellerCode</dd><dt>Chủ quán</dt><dd>@Model.SellerName</dd><dt>Mã quán</dt><dd>@Model.RestaurantCode</dd><dt>Tên quán</dt><dd>@Model.RestaurantName</dd><dt>Danh mục quán</dt><dd>@Model.CategoryName</dd><dt>Số điện thoại</dt><dd>@Model.Phone</dd><dt>Email</dt><dd>@Model.Email</dd><dt>Địa chỉ</dt><dd>@Model.Address</dd><dt>Mô tả</dt><dd>@Model.Description</dd><dt>Đánh giá</dt><dd>@Model.Rating.ToString("0.0")</dd></dl></section>

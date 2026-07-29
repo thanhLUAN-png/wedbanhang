@@ -1,0 +1,2522 @@
+[
+  {
+    "id": 1,
+    "code": "BT-74101118-0001",
+    "name": "Phở Gia Truyền",
+    "region_code": "BT",
+    "latitude": 10.74103,
+    "longitude": 106.61118,
+    "phone": "0902000001",
+    "email": "quan01@amthucmau.vn",
+    "address": "106/30/15 Đỗ Năng Tế, Phường An Lạc, Quận Bình Tân, TP. Hồ Chí Minh",
+    "description": "Quán phở phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-BT-0001",
+    "menu": [
+      {
+        "code": "BT-74101118-0001-M01",
+        "name": "Phở Gia Truyền – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "BT-74101118-0001-M02",
+        "name": "Phở Gia Truyền – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Tái"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M03",
+        "name": "Phở Gia Truyền – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Tái",
+          "Gầu"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M04",
+        "name": "Phở Gia Truyền – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Tái",
+          "Gầu",
+          "Bò viên"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M05",
+        "name": "Phở Gia Truyền – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "BT-74101118-0001-M06",
+        "name": "Phở Gia Truyền – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Tái"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M07",
+        "name": "Phở Gia Truyền – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Tái",
+          "Gầu"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M08",
+        "name": "Phở Gia Truyền – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Tái",
+          "Gầu",
+          "Bò viên"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M09",
+        "name": "Phở Gia Truyền – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "BT-74101118-0001-M10",
+        "name": "Phở Gia Truyền – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Tái"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M11",
+        "name": "Phở Gia Truyền – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Tái",
+          "Gầu"
+        ]
+      },
+      {
+        "code": "BT-74101118-0001-M12",
+        "name": "Phở Gia Truyền – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Tái",
+          "Gầu",
+          "Bò viên"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 2,
+    "code": "Q1-77680091-0002",
+    "name": "Cơm Tấm Sài Gòn",
+    "region_code": "Q1",
+    "latitude": 10.77689,
+    "longitude": 106.70091,
+    "phone": "0902000002",
+    "email": "quan02@amthucmau.vn",
+    "address": "42 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+    "description": "Quán cơm tấm phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q1-0002",
+    "menu": [
+      {
+        "code": "Q1-77680091-0002-M01",
+        "name": "Cơm Tấm Sài Gòn – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q1-77680091-0002-M02",
+        "name": "Cơm Tấm Sài Gòn – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M03",
+        "name": "Cơm Tấm Sài Gòn – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M04",
+        "name": "Cơm Tấm Sài Gòn – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì",
+          "Chả"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M05",
+        "name": "Cơm Tấm Sài Gòn – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q1-77680091-0002-M06",
+        "name": "Cơm Tấm Sài Gòn – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M07",
+        "name": "Cơm Tấm Sài Gòn – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M08",
+        "name": "Cơm Tấm Sài Gòn – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì",
+          "Chả"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M09",
+        "name": "Cơm Tấm Sài Gòn – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q1-77680091-0002-M10",
+        "name": "Cơm Tấm Sài Gòn – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M11",
+        "name": "Cơm Tấm Sài Gòn – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì"
+        ]
+      },
+      {
+        "code": "Q1-77680091-0002-M12",
+        "name": "Cơm Tấm Sài Gòn – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Trứng ốp la",
+          "Bì",
+          "Chả"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Cơm",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 3,
+    "code": "Q3-78258472-0003",
+    "name": "Bún Bò Huế Cố Đô",
+    "region_code": "Q3",
+    "latitude": 10.78256,
+    "longitude": 106.68472,
+    "phone": "0902000003",
+    "email": "quan03@amthucmau.vn",
+    "address": "118 Võ Văn Tần, Quận 3, TP. Hồ Chí Minh",
+    "description": "Quán bún bò huế phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q3-0003",
+    "menu": [
+      {
+        "code": "Q3-78258472-0003-M01",
+        "name": "Bún Bò Huế Cố Đô – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q3-78258472-0003-M02",
+        "name": "Bún Bò Huế Cố Đô – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M03",
+        "name": "Bún Bò Huế Cố Đô – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M04",
+        "name": "Bún Bò Huế Cố Đô – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo",
+          "Huyết"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M05",
+        "name": "Bún Bò Huế Cố Đô – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q3-78258472-0003-M06",
+        "name": "Bún Bò Huế Cố Đô – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M07",
+        "name": "Bún Bò Huế Cố Đô – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M08",
+        "name": "Bún Bò Huế Cố Đô – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo",
+          "Huyết"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M09",
+        "name": "Bún Bò Huế Cố Đô – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q3-78258472-0003-M10",
+        "name": "Bún Bò Huế Cố Đô – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M11",
+        "name": "Bún Bò Huế Cố Đô – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo"
+        ]
+      },
+      {
+        "code": "Q3-78258472-0003-M12",
+        "name": "Bún Bò Huế Cố Đô – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Chả cua",
+          "Giò heo",
+          "Huyết"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 4,
+    "code": "Q5-75436514-0004",
+    "name": "Hủ Tiếu Nam Vang Phát Tài",
+    "region_code": "Q5",
+    "latitude": 10.75438,
+    "longitude": 106.66514,
+    "phone": "0902000004",
+    "email": "quan04@amthucmau.vn",
+    "address": "215 Nguyễn Trãi, Quận 5, TP. Hồ Chí Minh",
+    "description": "Quán hủ tiếu nam vang phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q5-0004",
+    "menu": [
+      {
+        "code": "Q5-75436514-0004-M01",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q5-75436514-0004-M02",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M03",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M04",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M05",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q5-75436514-0004-M06",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M07",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M08",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M09",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q5-75436514-0004-M10",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M11",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm"
+        ]
+      },
+      {
+        "code": "Q5-75436514-0004-M12",
+        "name": "Hủ Tiếu Nam Vang Phát Tài – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Tôm",
+          "Thịt bằm",
+          "Trứng cút"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Hủ tiếu / Bánh canh",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 5,
+    "code": "Q7-73062145-0005",
+    "name": "Bánh Xèo – Bánh Khọt Miền Tây",
+    "region_code": "Q7",
+    "latitude": 10.73062,
+    "longitude": 106.72145,
+    "phone": "0902000005",
+    "email": "quan05@amthucmau.vn",
+    "address": "68 Nguyễn Thị Thập, Quận 7, TP. Hồ Chí Minh",
+    "description": "Quán bánh xèo, bánh khọt phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q7-0005",
+    "menu": [
+      {
+        "code": "Q7-73062145-0005-M01",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q7-73062145-0005-M02",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M03",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M04",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M05",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q7-73062145-0005-M06",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M07",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M08",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M09",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q7-73062145-0005-M10",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M11",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt"
+        ]
+      },
+      {
+        "code": "Q7-73062145-0005-M12",
+        "name": "Bánh Xèo – Bánh Khọt Miền Tây – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Tôm",
+          "Thịt vịt",
+          "Nấm"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Bánh xèo / Bánh khọt",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 6,
+    "code": "Q10-77187025-0006",
+    "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn",
+    "region_code": "Q10",
+    "latitude": 10.77184,
+    "longitude": 106.67025,
+    "phone": "0902000006",
+    "email": "quan06@amthucmau.vn",
+    "address": "94 Thành Thái, Quận 10, TP. Hồ Chí Minh",
+    "description": "Quán mì tàu, mì vịt tiềm phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q10-0006",
+    "menu": [
+      {
+        "code": "Q10-77187025-0006-M01",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q10-77187025-0006-M02",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Vịt quay"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M03",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M04",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng",
+          "Cải xanh"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M05",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q10-77187025-0006-M06",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Vịt quay"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M07",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M08",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng",
+          "Cải xanh"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M09",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q10-77187025-0006-M10",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Vịt quay"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M11",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng"
+        ]
+      },
+      {
+        "code": "Q10-77187025-0006-M12",
+        "name": "Mì Tàu – Mì Vịt Tiềm Chợ Lớn – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Vịt quay",
+          "Trứng",
+          "Cải xanh"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Mì",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 7,
+    "code": "Q11-76244781-0007",
+    "name": "Bún Chả Hà Nội",
+    "region_code": "Q11",
+    "latitude": 10.76243,
+    "longitude": 106.64781,
+    "phone": "0902000007",
+    "email": "quan07@amthucmau.vn",
+    "address": "33 Lạc Long Quân, Quận 11, TP. Hồ Chí Minh",
+    "description": "Quán bún chả phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q11-0007",
+    "menu": [
+      {
+        "code": "Q11-76244781-0007-M01",
+        "name": "Bún Chả Hà Nội – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q11-76244781-0007-M02",
+        "name": "Bún Chả Hà Nội – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M03",
+        "name": "Bún Chả Hà Nội – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M04",
+        "name": "Bún Chả Hà Nội – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán",
+          "Thịt nướng"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M05",
+        "name": "Bún Chả Hà Nội – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q11-76244781-0007-M06",
+        "name": "Bún Chả Hà Nội – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M07",
+        "name": "Bún Chả Hà Nội – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M08",
+        "name": "Bún Chả Hà Nội – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán",
+          "Thịt nướng"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M09",
+        "name": "Bún Chả Hà Nội – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q11-76244781-0007-M10",
+        "name": "Bún Chả Hà Nội – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Chả cua"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M11",
+        "name": "Bún Chả Hà Nội – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán"
+        ]
+      },
+      {
+        "code": "Q11-76244781-0007-M12",
+        "name": "Bún Chả Hà Nội – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Chả cua",
+          "Nem rán",
+          "Thịt nướng"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 8,
+    "code": "BTH-80760724-0008",
+    "name": "Lẩu Mắm Miền Tây",
+    "region_code": "BTH",
+    "latitude": 10.80762,
+    "longitude": 106.70724,
+    "phone": "0902000008",
+    "email": "quan08@amthucmau.vn",
+    "address": "201 Phan Văn Trị, Quận Bình Thạnh, TP. Hồ Chí Minh",
+    "description": "Quán lẩu mắm phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-BTH-0008",
+    "menu": [
+      {
+        "code": "BTH-80760724-0008-M01",
+        "name": "Lẩu Mắm Miền Tây – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "BTH-80760724-0008-M02",
+        "name": "Lẩu Mắm Miền Tây – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M03",
+        "name": "Lẩu Mắm Miền Tây – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Tôm",
+          "Mực"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M04",
+        "name": "Lẩu Mắm Miền Tây – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Tôm",
+          "Mực",
+          "Rau nhút"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M05",
+        "name": "Lẩu Mắm Miền Tây – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "BTH-80760724-0008-M06",
+        "name": "Lẩu Mắm Miền Tây – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M07",
+        "name": "Lẩu Mắm Miền Tây – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Tôm",
+          "Mực"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M08",
+        "name": "Lẩu Mắm Miền Tây – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Tôm",
+          "Mực",
+          "Rau nhút"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M09",
+        "name": "Lẩu Mắm Miền Tây – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "BTH-80760724-0008-M10",
+        "name": "Lẩu Mắm Miền Tây – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M11",
+        "name": "Lẩu Mắm Miền Tây – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Tôm",
+          "Mực"
+        ]
+      },
+      {
+        "code": "BTH-80760724-0008-M12",
+        "name": "Lẩu Mắm Miền Tây – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Tôm",
+          "Mực",
+          "Rau nhút"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Lẩu",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 9,
+    "code": "GV-83867458-0009",
+    "name": "Bánh Canh Cua – Hủ Tiếu Cua",
+    "region_code": "GV",
+    "latitude": 10.83864,
+    "longitude": 106.67458,
+    "phone": "0902000009",
+    "email": "quan09@amthucmau.vn",
+    "address": "125 Quang Trung, Quận Gò Vấp, TP. Hồ Chí Minh",
+    "description": "Quán món cua phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-GV-0009",
+    "menu": [
+      {
+        "code": "GV-83867458-0009-M01",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "GV-83867458-0009-M02",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Thịt cua"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M03",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M04",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M05",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "GV-83867458-0009-M06",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Thịt cua"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M07",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M08",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M09",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "GV-83867458-0009-M10",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Thịt cua"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M11",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "GV-83867458-0009-M12",
+        "name": "Bánh Canh Cua – Hủ Tiếu Cua – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Thịt cua",
+          "Chả cá",
+          "Trứng cút"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Hủ tiếu / Bánh canh",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 10,
+    "code": "TB-80105317-0010",
+    "name": "Cơm Niêu Gia Đình",
+    "region_code": "TB",
+    "latitude": 10.80105,
+    "longitude": 106.65317,
+    "phone": "0902000010",
+    "email": "quan10@amthucmau.vn",
+    "address": "79 Cộng Hòa, Quận Tân Bình, TP. Hồ Chí Minh",
+    "description": "Quán cơm niêu, cơm gia đình phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-TB-0010",
+    "menu": [
+      {
+        "code": "TB-80105317-0010-M01",
+        "name": "Cơm Niêu Gia Đình – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "TB-80105317-0010-M02",
+        "name": "Cơm Niêu Gia Đình – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Trứng chiên"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M03",
+        "name": "Cơm Niêu Gia Đình – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M04",
+        "name": "Cơm Niêu Gia Đình – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua",
+          "Rau xào"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M05",
+        "name": "Cơm Niêu Gia Đình – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "TB-80105317-0010-M06",
+        "name": "Cơm Niêu Gia Đình – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Trứng chiên"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M07",
+        "name": "Cơm Niêu Gia Đình – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M08",
+        "name": "Cơm Niêu Gia Đình – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua",
+          "Rau xào"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M09",
+        "name": "Cơm Niêu Gia Đình – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "TB-80105317-0010-M10",
+        "name": "Cơm Niêu Gia Đình – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Trứng chiên"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M11",
+        "name": "Cơm Niêu Gia Đình – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua"
+        ]
+      },
+      {
+        "code": "TB-80105317-0010-M12",
+        "name": "Cơm Niêu Gia Đình – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Trứng chiên",
+          "Canh chua",
+          "Rau xào"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Cơm",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 11,
+    "code": "TPD-84925344-0011",
+    "name": "Bún Đậu Mắm Tôm",
+    "region_code": "TPD",
+    "latitude": 10.84921,
+    "longitude": 106.75344,
+    "phone": "0902000011",
+    "email": "quan11@amthucmau.vn",
+    "address": "16 Võ Văn Ngân, TP. Thủ Đức, TP. Hồ Chí Minh",
+    "description": "Quán bún đậu phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-TPD-0011",
+    "menu": [
+      {
+        "code": "TPD-84925344-0011-M01",
+        "name": "Bún Đậu Mắm Tôm – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "TPD-84925344-0011-M02",
+        "name": "Bún Đậu Mắm Tôm – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Chả cốm"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M03",
+        "name": "Bún Đậu Mắm Tôm – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M04",
+        "name": "Bún Đậu Mắm Tôm – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua",
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M05",
+        "name": "Bún Đậu Mắm Tôm – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "TPD-84925344-0011-M06",
+        "name": "Bún Đậu Mắm Tôm – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Chả cốm"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M07",
+        "name": "Bún Đậu Mắm Tôm – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M08",
+        "name": "Bún Đậu Mắm Tôm – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua",
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M09",
+        "name": "Bún Đậu Mắm Tôm – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "TPD-84925344-0011-M10",
+        "name": "Bún Đậu Mắm Tôm – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Chả cốm"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M11",
+        "name": "Bún Đậu Mắm Tôm – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua"
+        ]
+      },
+      {
+        "code": "TPD-84925344-0011-M12",
+        "name": "Bún Đậu Mắm Tôm – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Chả cốm",
+          "Nem chua",
+          "Đậu hũ"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Bún đậu mắm tôm",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 12,
+    "code": "Q4-75990463-0012",
+    "name": "Bún Mắm Miền Tây",
+    "region_code": "Q4",
+    "latitude": 10.75991,
+    "longitude": 106.70463,
+    "phone": "0902000012",
+    "email": "quan12@amthucmau.vn",
+    "address": "57 Hoàng Diệu, Quận 4, TP. Hồ Chí Minh",
+    "description": "Quán bún mắm phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q4-0012",
+    "menu": [
+      {
+        "code": "Q4-75990463-0012-M01",
+        "name": "Bún Mắm Miền Tây – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q4-75990463-0012-M02",
+        "name": "Bún Mắm Miền Tây – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M03",
+        "name": "Bún Mắm Miền Tây – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Tôm",
+          "Cá"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M04",
+        "name": "Bún Mắm Miền Tây – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Tôm",
+          "Cá",
+          "Heo quay"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M05",
+        "name": "Bún Mắm Miền Tây – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q4-75990463-0012-M06",
+        "name": "Bún Mắm Miền Tây – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M07",
+        "name": "Bún Mắm Miền Tây – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Tôm",
+          "Cá"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M08",
+        "name": "Bún Mắm Miền Tây – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Tôm",
+          "Cá",
+          "Heo quay"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M09",
+        "name": "Bún Mắm Miền Tây – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q4-75990463-0012-M10",
+        "name": "Bún Mắm Miền Tây – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Tôm"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M11",
+        "name": "Bún Mắm Miền Tây – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Tôm",
+          "Cá"
+        ]
+      },
+      {
+        "code": "Q4-75990463-0012-M12",
+        "name": "Bún Mắm Miền Tây – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Tôm",
+          "Cá",
+          "Heo quay"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 13,
+    "code": "Q6-74653529-0013",
+    "name": "Bánh Mì Sài Gòn",
+    "region_code": "Q6",
+    "latitude": 10.74658,
+    "longitude": 106.63529,
+    "phone": "0902000013",
+    "email": "quan13@amthucmau.vn",
+    "address": "212 Hậu Giang, Quận 6, TP. Hồ Chí Minh",
+    "description": "Quán bánh mì phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q6-0013",
+    "menu": [
+      {
+        "code": "Q6-74653529-0013-M01",
+        "name": "Bánh Mì Sài Gòn – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q6-74653529-0013-M02",
+        "name": "Bánh Mì Sài Gòn – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M03",
+        "name": "Bánh Mì Sài Gòn – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M04",
+        "name": "Bánh Mì Sài Gòn – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích",
+          "Phô mai"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M05",
+        "name": "Bánh Mì Sài Gòn – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q6-74653529-0013-M06",
+        "name": "Bánh Mì Sài Gòn – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M07",
+        "name": "Bánh Mì Sài Gòn – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M08",
+        "name": "Bánh Mì Sài Gòn – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích",
+          "Phô mai"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M09",
+        "name": "Bánh Mì Sài Gòn – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q6-74653529-0013-M10",
+        "name": "Bánh Mì Sài Gòn – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Trứng ốp la"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M11",
+        "name": "Bánh Mì Sài Gòn – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích"
+        ]
+      },
+      {
+        "code": "Q6-74653529-0013-M12",
+        "name": "Bánh Mì Sài Gòn – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Trứng ốp la",
+          "Xúc xích",
+          "Phô mai"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Bánh mì",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 14,
+    "code": "Q8-74178156-0014",
+    "name": "Bún Mắm Nêm – Bún Thịt Nướng",
+    "region_code": "Q8",
+    "latitude": 10.74177,
+    "longitude": 106.68156,
+    "phone": "0902000014",
+    "email": "quan14@amthucmau.vn",
+    "address": "98 Tạ Quang Bửu, Quận 8, TP. Hồ Chí Minh",
+    "description": "Quán bún mắm nêm phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q8-0014",
+    "menu": [
+      {
+        "code": "Q8-74178156-0014-M01",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q8-74178156-0014-M02",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Thịt nướng"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M03",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M04",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò",
+          "Trứng"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M05",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q8-74178156-0014-M06",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Thịt nướng"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M07",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M08",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò",
+          "Trứng"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M09",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q8-74178156-0014-M10",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Thịt nướng"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M11",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò"
+        ]
+      },
+      {
+        "code": "Q8-74178156-0014-M12",
+        "name": "Bún Mắm Nêm – Bún Thịt Nướng – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Thịt nướng",
+          "Chả giò",
+          "Trứng"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 15,
+    "code": "Q12-86535502-0015",
+    "name": "Cháo Lòng Đêm",
+    "region_code": "Q12",
+    "latitude": 10.86531,
+    "longitude": 106.65502,
+    "phone": "0902000015",
+    "email": "quan15@amthucmau.vn",
+    "address": "45 Lê Văn Khương, Quận 12, TP. Hồ Chí Minh",
+    "description": "Quán cháo lòng phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-Q12-0015",
+    "menu": [
+      {
+        "code": "Q12-86535502-0015-M01",
+        "name": "Cháo Lòng Đêm – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "Q12-86535502-0015-M02",
+        "name": "Cháo Lòng Đêm – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Lòng non"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M03",
+        "name": "Cháo Lòng Đêm – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Lòng non",
+          "Huyết"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M04",
+        "name": "Cháo Lòng Đêm – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Lòng non",
+          "Huyết",
+          "Quẩy"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M05",
+        "name": "Cháo Lòng Đêm – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "Q12-86535502-0015-M06",
+        "name": "Cháo Lòng Đêm – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Lòng non"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M07",
+        "name": "Cháo Lòng Đêm – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Lòng non",
+          "Huyết"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M08",
+        "name": "Cháo Lòng Đêm – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Lòng non",
+          "Huyết",
+          "Quẩy"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M09",
+        "name": "Cháo Lòng Đêm – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "Q12-86535502-0015-M10",
+        "name": "Cháo Lòng Đêm – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Lòng non"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M11",
+        "name": "Cháo Lòng Đêm – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Lòng non",
+          "Huyết"
+        ]
+      },
+      {
+        "code": "Q12-86535502-0015-M12",
+        "name": "Cháo Lòng Đêm – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Lòng non",
+          "Huyết",
+          "Quẩy"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Cháo",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 16,
+    "code": "BTN-76910043-0016",
+    "name": "Bò Lá Lốt & Đồ Nướng",
+    "region_code": "BTN",
+    "latitude": 10.76918,
+    "longitude": 106.60043,
+    "phone": "0902000016",
+    "email": "quan16@amthucmau.vn",
+    "address": "168 Tên Lửa, Quận Bình Tân, TP. Hồ Chí Minh",
+    "description": "Quán món bò nướng phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-BTN-0016",
+    "menu": [
+      {
+        "code": "BTN-76910043-0016-M01",
+        "name": "Bò Lá Lốt & Đồ Nướng – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "BTN-76910043-0016-M02",
+        "name": "Bò Lá Lốt & Đồ Nướng – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Bò lá lốt"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M03",
+        "name": "Bò Lá Lốt & Đồ Nướng – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M04",
+        "name": "Bò Lá Lốt & Đồ Nướng – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M05",
+        "name": "Bò Lá Lốt & Đồ Nướng – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "BTN-76910043-0016-M06",
+        "name": "Bò Lá Lốt & Đồ Nướng – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Bò lá lốt"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M07",
+        "name": "Bò Lá Lốt & Đồ Nướng – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M08",
+        "name": "Bò Lá Lốt & Đồ Nướng – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M09",
+        "name": "Bò Lá Lốt & Đồ Nướng – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "BTN-76910043-0016-M10",
+        "name": "Bò Lá Lốt & Đồ Nướng – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Bò lá lốt"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M11",
+        "name": "Bò Lá Lốt & Đồ Nướng – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò"
+        ]
+      },
+      {
+        "code": "BTN-76910043-0016-M12",
+        "name": "Bò Lá Lốt & Đồ Nướng – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Bò lá lốt",
+          "Ba chỉ bò",
+          "Nấm"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Đồ nướng",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 17,
+    "code": "HM-88369384-0017",
+    "name": "Vị Chay An Nhiên",
+    "region_code": "HM",
+    "latitude": 10.88361,
+    "longitude": 106.59384,
+    "phone": "0902000017",
+    "email": "quan17@amthucmau.vn",
+    "address": "71 Quốc lộ 22, Huyện Hóc Môn, TP. Hồ Chí Minh",
+    "description": "Quán món chay phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-HM-0017",
+    "menu": [
+      {
+        "code": "HM-88369384-0017-M01",
+        "name": "Vị Chay An Nhiên – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "HM-88369384-0017-M02",
+        "name": "Vị Chay An Nhiên – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M03",
+        "name": "Vị Chay An Nhiên – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M04",
+        "name": "Vị Chay An Nhiên – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Rau củ"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M05",
+        "name": "Vị Chay An Nhiên – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "HM-88369384-0017-M06",
+        "name": "Vị Chay An Nhiên – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M07",
+        "name": "Vị Chay An Nhiên – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M08",
+        "name": "Vị Chay An Nhiên – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Rau củ"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M09",
+        "name": "Vị Chay An Nhiên – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "HM-88369384-0017-M10",
+        "name": "Vị Chay An Nhiên – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M11",
+        "name": "Vị Chay An Nhiên – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "HM-88369384-0017-M12",
+        "name": "Vị Chay An Nhiên – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Rau củ"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Món chay",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 18,
+    "code": "NB-69713269-0018",
+    "name": "Bún Cá Kiên Giang – Nha Trang",
+    "region_code": "NB",
+    "latitude": 10.69715,
+    "longitude": 106.73269,
+    "phone": "0902000018",
+    "email": "quan18@amthucmau.vn",
+    "address": "22 Huỳnh Tấn Phát, Huyện Nhà Bè, TP. Hồ Chí Minh",
+    "description": "Quán bún cá phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-NB-0018",
+    "menu": [
+      {
+        "code": "NB-69713269-0018-M01",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "NB-69713269-0018-M02",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M03",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M04",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M05",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "NB-69713269-0018-M06",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M07",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M08",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống",
+          "Trứng cút"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M09",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "NB-69713269-0018-M10",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Chả cá"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M11",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống"
+        ]
+      },
+      {
+        "code": "NB-69713269-0018-M12",
+        "name": "Bún Cá Kiên Giang – Nha Trang – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Chả cá",
+          "Rau sống",
+          "Trứng cút"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Phở / Bún",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 19,
+    "code": "BC-69987631-0019",
+    "name": "Ốc & Hải Sản Bình Dân",
+    "region_code": "BC",
+    "latitude": 10.69983,
+    "longitude": 106.57631,
+    "phone": "0902000019",
+    "email": "quan19@amthucmau.vn",
+    "address": "93 Nguyễn Văn Linh, Huyện Bình Chánh, TP. Hồ Chí Minh",
+    "description": "Quán ốc, hải sản phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-BC-0019",
+    "menu": [
+      {
+        "code": "BC-69987631-0019-M01",
+        "name": "Ốc & Hải Sản Bình Dân – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "BC-69987631-0019-M02",
+        "name": "Ốc & Hải Sản Bình Dân – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Rau muống"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M03",
+        "name": "Ốc & Hải Sản Bình Dân – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M04",
+        "name": "Ốc & Hải Sản Bình Dân – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì",
+          "Muối ớt"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M05",
+        "name": "Ốc & Hải Sản Bình Dân – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "BC-69987631-0019-M06",
+        "name": "Ốc & Hải Sản Bình Dân – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Rau muống"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M07",
+        "name": "Ốc & Hải Sản Bình Dân – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M08",
+        "name": "Ốc & Hải Sản Bình Dân – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì",
+          "Muối ớt"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M09",
+        "name": "Ốc & Hải Sản Bình Dân – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "BC-69987631-0019-M10",
+        "name": "Ốc & Hải Sản Bình Dân – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Rau muống"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M11",
+        "name": "Ốc & Hải Sản Bình Dân – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì"
+        ]
+      },
+      {
+        "code": "BC-69987631-0019-M12",
+        "name": "Ốc & Hải Sản Bình Dân – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Rau muống",
+          "Bánh mì",
+          "Muối ớt"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Hải sản",
+    "opening_time": "0",
+    "closing_time": "0"
+  },
+  {
+    "id": 20,
+    "code": "CC-97469317-0020",
+    "name": "Lẩu Dê Núi",
+    "region_code": "CC",
+    "latitude": 10.97462,
+    "longitude": 106.49317,
+    "phone": "0902000020",
+    "email": "quan20@amthucmau.vn",
+    "address": "36 Tỉnh lộ 8, Huyện Củ Chi, TP. Hồ Chí Minh",
+    "description": "Quán lẩu dê, món dê phục vụ mỗi ngày.",
+    "rating": 0,
+    "rating_count": 0,
+    "total_order_count": 0,
+    "completion_rate": 0,
+    "opening_hours": "0",
+    "logo_url": "0",
+    "seller_code": "SL-CC-0020",
+    "menu": [
+      {
+        "code": "CC-97469317-0020-M01",
+        "name": "Lẩu Dê Núi – Đặc biệt",
+        "price": 30000,
+        "toppings": []
+      },
+      {
+        "code": "CC-97469317-0020-M02",
+        "name": "Lẩu Dê Núi – Truyền thống",
+        "price": 35000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M03",
+        "name": "Lẩu Dê Núi – Thập cẩm",
+        "price": 40000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M04",
+        "name": "Lẩu Dê Núi – Đầy đủ",
+        "price": 45000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Mì gói"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M05",
+        "name": "Lẩu Dê Núi – Thêm thịt",
+        "price": 50000,
+        "toppings": []
+      },
+      {
+        "code": "CC-97469317-0020-M06",
+        "name": "Lẩu Dê Núi – Thêm trứng",
+        "price": 55000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M07",
+        "name": "Lẩu Dê Núi – Cỡ nhỏ",
+        "price": 60000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M08",
+        "name": "Lẩu Dê Núi – Cỡ vừa",
+        "price": 65000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Mì gói"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M09",
+        "name": "Lẩu Dê Núi – Cỡ lớn",
+        "price": 70000,
+        "toppings": []
+      },
+      {
+        "code": "CC-97469317-0020-M10",
+        "name": "Lẩu Dê Núi – Cay nhẹ",
+        "price": 75000,
+        "toppings": [
+          "Đậu hũ"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M11",
+        "name": "Lẩu Dê Núi – Không cay",
+        "price": 80000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm"
+        ]
+      },
+      {
+        "code": "CC-97469317-0020-M12",
+        "name": "Lẩu Dê Núi – Phần đặc biệt",
+        "price": 85000,
+        "toppings": [
+          "Đậu hũ",
+          "Nấm",
+          "Mì gói"
+        ]
+      }
+    ],
+    "promotion_count": 0,
+    "promotions": [],
+    "message_count": 0,
+    "shop_category": "Lẩu",
+    "opening_time": "0",
+    "closing_time": "0"
+  }
+]

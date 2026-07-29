@@ -1,0 +1,4 @@
+@model WEDBANDOAN.Models.SellerPortalViewModel
+@{ Layout = "_SellerLayout"; var title = ViewContext.RouteData.Values["action"]?.ToString(); }
+<section class="metric-grid"><article><small>Đơn hàng</small><strong>@Model.OrderCount</strong><span>chưa có dữ liệu: 0</span></article><article><small>Doanh thu</small><strong>@Model.Revenue.ToString("N0") ₫</strong><span>chưa có dữ liệu: 0</span></article><article><small>Đánh giá</small><strong>@Model.Rating.ToString("0.0")</strong><span>chưa có dữ liệu: 0</span></article></section>
+<section class="panel empty-panel"><h2>@title</h2><p>Trang đã đọc đúng quán <b>@Model.RestaurantName</b> từ SQL Server. Phần dữ liệu mẫu chưa có sẽ hiển thị bằng <b>0</b>, không tạo số liệu giả.</p></section>

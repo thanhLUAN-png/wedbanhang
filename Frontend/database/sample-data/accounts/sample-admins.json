@@ -1,0 +1,20 @@
+[
+  {
+    "admin_code": "ADM-0001",
+    "name": "Quản trị viên",
+    "email": "admin@shopviet.vn",
+    "phone": "0901999999",
+    "password": "123456",
+    "role": "admin",
+    "status": "active",
+    "dashboard_summary": {
+      "total_revenue": 0,
+      "total_orders": 0,
+      "new_users": 0,
+      "revenue_growth_percent": 0,
+      "order_growth_percent": 0,
+      "new_user_growth_percent": 0,
+      "recent_activities": []
+    }
+  }
+]

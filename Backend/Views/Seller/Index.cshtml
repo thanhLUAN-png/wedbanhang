@@ -1,0 +1,20 @@
+@model WEDBANDOAN.Models.SellerPortalViewModel
+@{
+    Layout = "_SellerLayout";
+    var today = DateTime.Today;
+    var periodLabel = "Hôm nay";
+    var subtitle = $"Hôm nay, {today:dd/MM/yyyy}";
+    var revenueTitle = "Doanh thu hôm nay";
+    var shortPeriod = "Ngày";
+    var chartLabels = Enumerable.Range(8, 12).Select(hour => $"{hour}:00");
+}
+<div class="dashboard-heading"><div><h1>Tổng quan</h1><p>@subtitle</p></div><span class="today-badge">Hôm nay</span></div>
+<section class="stats-grid">
+ <article class="stat-card"><div class="stat-icon green">$</div><div><strong>@Model.Revenue.ToString("N0") ₫</strong><p>Doanh thu (@shortPeriod)</p></div></article>
+ <article class="stat-card"><div class="stat-icon orange-card">□</div><div><strong>0</strong><p>Đơn chờ xác nhận</p><small>Cần xử lý gấp</small></div></article>
+ <article class="stat-card"><div class="stat-icon blue">♧</div><div><strong>0</strong><p>Đang giao</p><small>Shipper đang giao</small></div></article>
+ <article class="stat-card"><div class="stat-icon purple">↗</div><div><strong>@Model.OrderCount</strong><p>Số đơn (@shortPeriod)</p></div></article>
+</section>
+<section class="dash-columns"><article class="dash-panel chart-panel"><div class="panel-title"><h2>@revenueTitle</h2><span>Kênh người bán</span></div><div class="zero-chart"><div class="chart-y"><span>40.0M</span><span>20.0M</span><span>0.0M</span></div><div class="chart-bars">@foreach (var label in chartLabels) { <div><i></i><span>@label</span></div> }</div></div><p class="chart-zero">Chưa có dữ liệu doanh thu: 0 ₫</p></article>
+<article class="dash-panel best-panel"><h2>🏆 Bán chạy nhất (@periodLabel)</h2><div class="best-list">@foreach (var item in Model.Products.Take(5).Select((product, index) => new { product, index })) { <div class="best-item"><span class="rank">#@(item.index + 1)</span><span class="product-thumb">@item.product.Name[..1].ToUpper()</span><div><b>@item.product.Name</b><small>Đã bán: <em>0</em></small></div></div> } @if (!Model.Products.Any()) { <p class="no-row">0 sản phẩm</p> }</div></article></section>
+<section class="dash-panel orders-panel"><div class="panel-title"><h2>Đơn hàng mới nhất</h2><a asp-action="Orders">Xem tất cả →</a></div><div class="no-orders"><b>0 đơn hàng mới</b><span>Dữ liệu đơn hàng của quán chưa có nên hệ thống hiển thị 0.</span></div></section>
