@@ -161,22 +161,7 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
               </div>
             )}
 
-            {/* Status hint */}
-            {order.status === "accepted" && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
-                🛵 Hãy di chuyển đến quán <strong>{order.senderName}</strong> để lấy hàng. Bấm "Đã tới quán" khi bạn đến nơi.
-              </div>
-            )}
-            {order.status === "arrived" && (
-              <div className="mt-4 p-3 bg-purple-50 border border-purple-100 rounded-lg text-sm text-purple-700">
-                🏪 Bạn đã tới quán! Hãy chờ quán chuẩn bị và giao hàng cho bạn. Sau khi nhận hàng, chụp ảnh và bấm "Bắt đầu giao".
-              </div>
-            )}
-            {order.status === "delivering" && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-lg text-sm text-green-700">
-                🚀 Bạn đang trên đường giao hàng. Hãy liên hệ khách hàng trước khi đến. Bấm "Giao thành công" sau khi hoàn tất.
-              </div>
-            )}
+
           </div>
 
           {/* Pickup photo */}
