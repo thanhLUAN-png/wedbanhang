@@ -20,6 +20,7 @@ const TABS: { id: SellerOrderStatus | "all"; label: string }[] = [
   { id: "all",       label: "Tất cả" },
   { id: "pending",   label: "Nhận đơn" },
   { id: "confirmed", label: "Đang chuẩn bị" },
+  { id: "arrived",   label: "Shipper đã tới" },
   { id: "shipping",  label: "Đang giao" },
   { id: "completed", label: "Hoàn thành" },
   { id: "returned",  label: "Trả hàng/Hoàn tiền" },
@@ -33,6 +34,7 @@ const paymentLabel: Record<string, string> = {
 const cardBgColor: Record<SellerOrderStatus, string> = {
   pending:   "bg-orange-50/40 hover:bg-orange-50/80 border-orange-100",
   confirmed: "bg-blue-50/50 hover:bg-blue-50 border-blue-100",
+  arrived:   "bg-amber-50/70 hover:bg-amber-50 border-amber-200",
   shipping:  "bg-sky-50/50 hover:bg-sky-50 border-sky-100",
   completed: "bg-green-50/50 hover:bg-green-50 border-green-100",
   cancelled: "bg-red-50/50 hover:bg-red-50 border-red-100",
@@ -84,16 +86,18 @@ function OrderCard({
   order,
   onConfirm,
   onCancel,
+  onHandOff,
 }: {
   order: SellerOrder;
   onConfirm: (id: string) => void;
   onCancel: (id: string) => void;
+  onHandOff: (id: string) => void;
 }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const isCollapsible = order.status === "shipping" || order.status === "completed";
   const [isCardExpanded, setIsCardExpanded] = useState(!isCollapsible);
-  const [dialog, setDialog] = useState<null | "confirm" | "cancel">(null);
+  const [dialog, setDialog] = useState<null | "confirm" | "cancel" | "handoff">(null);
 
   const displayedItems = isExpanded ? order.items : order.items.slice(0, 3);
   const hiddenCount = order.items.length - 3;
@@ -216,7 +220,7 @@ function OrderCard({
                   <Bike className="w-4 h-4 text-green-500 shrink-0" />
                   <span className="text-green-700 font-medium">Shipper: {order.shipperName}</span>
                   <button
-                    onClick={() => navigate(`/seller/chat?tab=shippers&newId=s_${encodeURIComponent(order.shipperName)}&newName=${encodeURIComponent(order.shipperName)}&orderCode=${order.orderCode}`)}
+                    onClick={() => navigate(`/seller/chat?tab=shippers&newId=s_${encodeURIComponent(order.shipperName!)}&newName=${encodeURIComponent(order.shipperName!)}&orderCode=${order.orderCode}`)}
                     className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full transition-colors ml-1"
                   >
                     <MessageCircle className="w-3.5 h-3.5" /> Chat
@@ -247,6 +251,22 @@ function OrderCard({
               </div>
 
               {/* ── Action buttons theo từng trạng thái ── */}
+
+              {/* ARRIVED: Shipper đã tới – nút Giao hàng */}
+              {order.status === "arrived" && (
+                <div className="flex flex-col gap-2 items-end">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 border border-amber-300 rounded-xl text-xs text-amber-800 font-semibold animate-pulse">
+                    <Bike className="w-4 h-4" />
+                    Shipper đã tới quán!
+                  </div>
+                  <button
+                    onClick={() => setDialog("handoff")}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-colors shadow-sm"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Giao hàng cho Shipper
+                  </button>
+                </div>
+              )}
 
               {/* PENDING: Xác nhận đơn */}
               {order.status === "pending" && (
@@ -287,6 +307,17 @@ function OrderCard({
         confirmLabel="Xác nhận"
         confirmClass="bg-orange-500 hover:bg-orange-600"
         onConfirm={() => { setDialog(null); onConfirm(order.id); }}
+        onCancel={() => setDialog(null)}
+      />
+
+      {/* Dialog giao hàng cho shipper */}
+      <ConfirmDialog
+        open={dialog === "handoff"}
+        title="Giao hàng cho Shipper?"
+        message={`Shipper ${order.shipperName ?? ""} đang ở quán. Bạn xác nhận đã giao đủ đơn #${order.orderCode} cho shipper để bắt đầu giao đến khách hàng.`}
+        confirmLabel="Xác nhận giao"
+        confirmClass="bg-green-500 hover:bg-green-600"
+        onConfirm={() => { setDialog(null); onHandOff(order.id); }}
         onCancel={() => setDialog(null)}
       />
 
@@ -335,7 +366,7 @@ export default function SellerOrdersPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const updateOrderStatus = async (id: string, status: "confirmed" | "shipping" | "cancelled") => {
+  const updateOrderStatus = async (id: string, status: "confirmed" | "shipping" | "cancelled" | "ready") => {
     const response = await fetch(`/seller-api/seller/orders/${encodeURIComponent(id)}/status?sellerCode=SL-BT-0001`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -346,7 +377,9 @@ export default function SellerOrdersPage() {
       return;
     }
     setError("");
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    // "ready" -> DB sets shipping, but UI should show shipping
+    const uiStatus = status === "ready" ? "shipping" : status;
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: uiStatus } : o));
   };
 
   const handleConfirm = (id: string) => {
@@ -355,6 +388,10 @@ export default function SellerOrdersPage() {
 
   const handleCancel = (id: string) => {
     void updateOrderStatus(id, "cancelled");
+  };
+
+  const handleHandOff = (id: string) => {
+    void updateOrderStatus(id, "ready");  // arrived -> shipping
   };
 
   const filtered = orders.filter(o => {
@@ -415,6 +452,7 @@ export default function SellerOrdersPage() {
               order={order}
               onConfirm={handleConfirm}
               onCancel={handleCancel}
+              onHandOff={handleHandOff}
             />
           ))}
         </div>

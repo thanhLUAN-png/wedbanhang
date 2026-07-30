@@ -144,10 +144,12 @@ public sealed class SellerRepository(IConfiguration configuration)
         var expectedStatus = nextStatus switch
         {
             "confirmed" => "pending",
-            "shipping" => "confirmed",
+            "shipping"  => "confirmed",
+            "ready"     => "arrived",   // Seller bấm "Giao hàng" khi shipper đã tới (arrived -> handed_over)
             "cancelled" => "pending",
             _ => null
         };
+        var actualNextStatus = nextStatus == "ready" ? "handed_over" : nextStatus;
         if (expectedStatus is null) return false;
 
         await using var cn = new SqlConnection(_cs);
@@ -163,7 +165,7 @@ public sealed class SellerRepository(IConfiguration configuration)
               AND o.Status=@expectedStatus;
             """;
         await using var cmd = new SqlCommand(sql, cn);
-        cmd.Parameters.AddWithValue("@nextStatus", nextStatus);
+        cmd.Parameters.AddWithValue("@nextStatus", actualNextStatus);
         cmd.Parameters.AddWithValue("@expectedStatus", expectedStatus);
         cmd.Parameters.AddWithValue("@orderId", orderId);
         cmd.Parameters.AddWithValue("@sellerCode", sellerCode);
@@ -186,7 +188,7 @@ public sealed class SellerRepository(IConfiguration configuration)
             JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
             JOIN dbo.Customers c ON c.CustomerId=o.CustomerId
             WHERE (o.Status=N'confirmed' AND o.ShipperId IS NULL)
-               OR (o.ShipperId=@shipperId AND o.Status IN (N'confirmed',N'shipping',N'completed',N'cancelled'))
+               OR (o.ShipperId=@shipperId AND o.Status IN (N'confirmed',N'arrived',N'handed_over',N'shipping',N'completed',N'cancelled'))
             ORDER BY o.OrderedAt DESC,o.OrderId DESC;
             """;
         await using var cmd = new SqlCommand(sql, cn);
@@ -212,7 +214,7 @@ public sealed class SellerRepository(IConfiguration configuration)
         const string sql = """
             DECLARE @shipperId INT=(SELECT TOP 1 ShipperId FROM dbo.Shippers WHERE Phone=@phone);
             IF @shipperId IS NULL RETURN;
-            IF EXISTS(SELECT 1 FROM dbo.Orders WHERE ShipperId=@shipperId AND Status IN(N'confirmed',N'shipping')) RETURN;
+            IF EXISTS(SELECT 1 FROM dbo.Orders WHERE ShipperId=@shipperId AND Status IN(N'confirmed',N'arrived',N'shipping')) RETURN;
             UPDATE dbo.Orders
             SET ShipperId=@shipperId,
                 ShipperCodeSnapshot=(SELECT ShipperCode FROM dbo.Shippers WHERE ShipperId=@shipperId),
@@ -227,8 +229,27 @@ public sealed class SellerRepository(IConfiguration configuration)
 
     public async Task<bool> UpdateShipperOrderStatusAsync(int orderId, string phone, string nextStatus)
     {
-        var sqlStatus = nextStatus switch { "delivering" => "shipping", "delivered" => "completed", "cancelled" => "cancelled", _ => null };
-        var expected = nextStatus switch { "delivering" => "confirmed", "delivered" => "shipping", "cancelled" => "shipping", _ => null };
+        // Map frontend status -> DB status / expected DB status
+        // arrived: shipper tới quán (confirmed -> arrived)
+        // delivering: shipper đã nhận hàng, bắt đầu giao (arrived -> shipping)
+        // delivered: giao thành công (shipping -> completed)
+        // cancelled: huỷ (shipping -> cancelled)
+        var sqlStatus = nextStatus switch
+        {
+            "arrived"   => "arrived",
+            "delivering" => "shipping",
+            "delivered"  => "completed",
+            "cancelled"  => "cancelled",
+            _ => null
+        };
+        var expected = nextStatus switch
+        {
+            "arrived"    => "confirmed",
+            "delivering" => "handed_over",
+            "delivered"  => "shipping",
+            "cancelled"  => "shipping",
+            _ => null
+        };
         if (sqlStatus is null || expected is null) return false;
         await using var cn = new SqlConnection(_cs);
         await cn.OpenAsync();

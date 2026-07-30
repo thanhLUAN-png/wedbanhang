@@ -61,7 +61,9 @@ export default function ShipperApp() {
     receiverPhone: order.receiverPhone, receiverAddress: order.receiverAddress,
     items: order.items, weight: 0, cod: order.cod, shippingFee: order.shippingFee,
     distance: "—",
-    status: order.status === "shipping" ? "delivering"
+    status: order.status === "arrived" ? "arrived"
+      : order.status === "handed_over" ? "picked"
+      : order.status === "shipping" ? "delivering"
       : order.status === "completed" ? "delivered"
       : order.status === "cancelled" ? "cancelled"
       : order.assignedToMe ? "accepted" : "pending",
@@ -134,7 +136,7 @@ export default function ShipperApp() {
   };
 
   const handleAcceptOrder = async (orderId: string) => {
-    const activeOrder = orders.find(o => ["accepted", "picked", "delivering"].includes(o.status));
+    const activeOrder = orders.find(o => ["accepted", "arrived", "picked", "delivering"].includes(o.status));
     if (activeOrder && activeOrder.id !== orderId) {
       toast.error(`Bạn đang thực hiện đơn #${activeOrder.code}. Hãy hoàn thành đơn này trước.`);
       return;
@@ -148,28 +150,31 @@ export default function ShipperApp() {
     }
 
     setOrders(prev => prev
-      // Khi một shipper nhận đơn, các đơn chờ còn lại được phân cho shipper khác.
       .map(o => o.id === orderId ? { ...o, status: "accepted" as OrderStatus } : o)
     );
     setSelectedOrder(prev => prev?.id === orderId ? { ...prev, status: "accepted" } : prev);
     const acceptedOrder = orders.find(order => order.id === orderId);
     if (acceptedOrder) connectOrderChats(acceptedOrder);
-    toast.success("Đã nhận đơn. Bạn có thể bắt đầu giao hàng khi đã lấy món.");
+    toast.success("Đã nhận đơn! Hãy di chuyển đến quán để lấy hàng.");
   };
 
   const handleUpdateStatus = async (orderId: string, status: OrderStatus, proof?: string, cancelReason?: string, customerRating?: number, shopRating?: number, customerRatingMessage?: string, shopRatingMessage?: string) => {
-    if (["delivering", "delivered", "cancelled"].includes(status)) {
+    // API status cho "delivering" (shipper đã nhận hàng) là "delivering", backend sẽ map về "shipping"
+    if (["arrived", "delivering", "delivered", "cancelled"].includes(status)) {
+      const apiStatus = status === "arrived" ? "arrived" : status;
       const response = await fetch(`/seller-api/shipper/orders/${encodeURIComponent(orderId)}/status?phone=${encodeURIComponent(currentUser.phone)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: apiStatus }),
       });
       if (!response.ok) {
-        toast.error("Không thể cập nhật trạng thái đơn hàng.");
+        toast.error("Không thể cập nhật trạng thái. Có thể quán chưa bấm giao hàng, vui lòng đợi quán xác nhận giao.");
         await loadOrders();
         return;
       }
     }
+    // "picked" là sau khi seller giao hàng cho shipper, DB đã là "shipping" → đổi UI thành "delivering"
+    // Status "picked" chỉ là UI intermediate, không cần gọi API thêm
     const ratingSubmittedAt = customerRating || shopRating ? new Date().toISOString() : undefined;
     setOrders(prev => prev.map(o =>
       o.id === orderId ? { ...o, status, proofPhoto: proof ?? o.proofPhoto, note: cancelReason ?? o.note, customerRating, shopRating, customerRatingMessage, shopRatingMessage, ratingSubmittedAt } : o
