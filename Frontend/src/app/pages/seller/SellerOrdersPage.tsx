@@ -94,7 +94,7 @@ function OrderCard({
 }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
-  const isCollapsible = order.status === "shipping" || order.status === "completed";
+  const isCollapsible = order.status === "shipping" || order.status === "completed" || order.status === "cancelled";
   const [isCardExpanded, setIsCardExpanded] = useState(!isCollapsible);
   const [dialog, setDialog] = useState<null | "confirm" | "cancel" | "handoff">(null);
 
