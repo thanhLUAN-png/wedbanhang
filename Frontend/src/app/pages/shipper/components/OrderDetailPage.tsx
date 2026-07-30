@@ -50,14 +50,14 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
   // Determine next action label + icon
   const nextActionConfig: Partial<Record<OrderStatus, { label: string; icon: React.ReactNode; color: string }>> = {
     accepted:   { label: "Đã tới quán",         icon: <Navigation className="w-4 h-4" />,   color: "bg-blue-500 hover:bg-blue-600" },
-    arrived:    { label: "Nhận hàng & Bắt đầu giao", icon: <ShoppingBag className="w-4 h-4" />, color: "bg-purple-500 hover:bg-purple-600" },
+    picked:     { label: "Nhận hàng & Bắt đầu giao", icon: <ShoppingBag className="w-4 h-4" />, color: "bg-purple-500 hover:bg-purple-600" },
     delivering: { label: "Xác nhận giao thành công", icon: <CheckCircle className="w-4 h-4" />, color: "bg-green-500 hover:bg-green-600" },
   };
 
   const handleNextStatus = () => {
     if (order.status === "accepted") {
       onUpdateStatus(order.id, "arrived");
-    } else if (order.status === "arrived") {
+    } else if (order.status === "picked") {
       // Yêu cầu chụp ảnh nhận hàng tại quán
       setShowPickupPhotoModal(true);
     } else if (order.status === "delivering") {
@@ -252,18 +252,26 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
         {/* Right column */}
         <div className="w-80 space-y-4 overflow-y-auto">
           {/* Action buttons */}
-          {isActive && nextCfg && (
+          {isActive && (nextCfg || ["accepted","arrived","picked","delivering"].includes(order.status)) && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-2">
               <h3 className="text-orange-800 text-sm mb-3" style={{fontWeight:600}}>Cập nhật trạng thái</h3>
-              <button
-                onClick={handleNextStatus}
-                className={`w-full py-3 text-white rounded-xl text-sm transition-colors flex items-center justify-center gap-2 ${nextCfg.color}`}
-                style={{fontWeight:600}}
-              >
-                {nextCfg.icon}
-                {nextCfg.label}
-              </button>
-              {["accepted","arrived","delivering"].includes(order.status) && (
+              {nextCfg && (
+                <button
+                  onClick={handleNextStatus}
+                  className={`w-full py-3 text-white rounded-xl text-sm transition-colors flex items-center justify-center gap-2 ${nextCfg.color}`}
+                  style={{fontWeight:600}}
+                >
+                  {nextCfg.icon}
+                  {nextCfg.label}
+                </button>
+              )}
+              {!nextCfg && order.status === "arrived" && (
+                <div className="w-full py-3 bg-gray-100 text-gray-500 rounded-xl text-sm text-center flex items-center justify-center gap-2" style={{fontWeight:600}}>
+                  <Store className="w-4 h-4" />
+                  Đang chờ quán giao hàng...
+                </div>
+              )}
+              {["accepted","arrived","picked","delivering"].includes(order.status) && (
                 <button
                   onClick={() => setShowCancelModal(true)}
                   className="w-full py-2 border border-red-300 text-red-500 hover:bg-red-50 rounded-xl text-sm transition-colors"
