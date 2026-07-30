@@ -46,7 +46,7 @@ function ConfirmDialog({
 }: {
   open: boolean;
   title: string;
-  message: string;
+  message?: string;
   confirmLabel: string;
   confirmClass: string;
   onConfirm: () => void;
@@ -60,8 +60,8 @@ function ConfirmDialog({
         <button onClick={onCancel} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
           <X className="w-5 h-5" />
         </button>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <h3 className={`text-lg font-bold text-gray-900 ${message ? 'mb-2' : 'mb-6'}`}>{title}</h3>
+        {message && <p className="text-sm text-gray-600 mb-6">{message}</p>}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -317,11 +317,9 @@ function OrderCard({
         onCancel={() => setDialog(null)}
       />
 
-      {/* Dialog giao hàng cho shipper */}
       <ConfirmDialog
         open={dialog === "handoff"}
         title="Giao hàng cho Shipper?"
-        message="Xác nhận giao hàng cho Shipper."
         confirmLabel="Xác nhận giao"
         confirmClass="bg-green-500 hover:bg-green-600"
         onConfirm={() => { setDialog(null); onHandOff(order.id, order.status); }}
