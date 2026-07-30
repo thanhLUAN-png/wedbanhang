@@ -35,7 +35,7 @@ public sealed class SellerRepository(IConfiguration configuration)
               COALESCE(SUM(CASE WHEN o.Status=N'shipping' THEN 1 ELSE 0 END),0),
               COALESCE(SUM(CASE WHEN o.Status=N'completed' AND CAST(o.OrderedAt AS date)=CAST(GETDATE() AS date) THEN 1 ELSE 0 END),0),
               COALESCE(SUM(CASE WHEN o.Status=N'returned' AND CAST(o.OrderedAt AS date)=CAST(GETDATE() AS date) THEN 1 ELSE 0 END),0),
-              COALESCE(SUM(CASE WHEN o.Status=N'cancelled' AND CAST(o.OrderedAt AS date)=CAST(GETDATE() AS date) THEN 1 ELSE 0 END),0)
+              COALESCE(SUM(CASE WHEN o.Status=N'cancelled' AND ISNULL(o.CancelledBy, '') != N'user' AND CAST(o.OrderedAt AS date)=CAST(GETDATE() AS date) THEN 1 ELSE 0 END),0)
             FROM dbo.Orders o WHERE o.RestaurantId=@restaurantId;
             """;
         decimal revenue; int orders; int pending; int shipping; int completed; int returned; int cancelled;
@@ -112,6 +112,7 @@ public sealed class SellerRepository(IConfiguration configuration)
             LEFT JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId
             LEFT JOIN dbo.OrderItems i ON i.OrderId=o.OrderId
             WHERE s.SellerCode=@sellerCode
+              AND (o.Status != 'cancelled' OR ISNULL(o.CancelledBy, '') != 'user')
             ORDER BY o.OrderedAt DESC,o.OrderId DESC,i.OrderItemId;
             """;
         await using var cmd = new SqlCommand(sql, cn);
@@ -157,7 +158,8 @@ public sealed class SellerRepository(IConfiguration configuration)
         await cn.OpenAsync();
         const string sql = """
             UPDATE o
-            SET o.Status=@nextStatus,o.UpdatedAt=SYSDATETIME()
+            SET o.Status=@nextStatus,o.UpdatedAt=SYSDATETIME(),
+                o.CancelledBy = CASE WHEN @nextStatus = 'cancelled' THEN 'seller' ELSE o.CancelledBy END
             FROM dbo.Orders o
             JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
             JOIN dbo.Sellers s ON s.SellerId=r.SellerId
@@ -252,7 +254,7 @@ public sealed class SellerRepository(IConfiguration configuration)
         if (nextStatus == "cancelled")
         {
             const string cancelSql = """
-                UPDATE o SET Status='cancelled', UpdatedAt=SYSDATETIME()
+                UPDATE o SET Status='cancelled', CancelledBy='shipper', UpdatedAt=SYSDATETIME()
                 FROM dbo.Orders o JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId
                 WHERE o.OrderId=@orderId AND sh.Phone=@phone
                   AND o.Status IN ('confirmed','arrived','handed_over','shipping');
@@ -506,7 +508,7 @@ public sealed class SellerRepository(IConfiguration configuration)
     public async Task<bool> CancelCustomerOrderAsync(string code,string phone)
     {
         await using var cn=new SqlConnection(_cs);await cn.OpenAsync();
-        const string sql="UPDATE o SET Status=N'cancelled',UpdatedAt=SYSDATETIME() FROM dbo.Orders o JOIN dbo.Customers c ON c.CustomerId=o.CustomerId WHERE o.OrderCode=@code AND c.Phone=@phone AND o.Status=N'pending';";
+        const string sql="UPDATE o SET Status=N'cancelled',CancelledBy=N'user',UpdatedAt=SYSDATETIME() FROM dbo.Orders o JOIN dbo.Customers c ON c.CustomerId=o.CustomerId WHERE o.OrderCode=@code AND c.Phone=@phone AND o.Status=N'pending';";
         await using var cmd=new SqlCommand(sql,cn);cmd.Parameters.AddWithValue("@code",code);cmd.Parameters.AddWithValue("@phone",phone);return await cmd.ExecuteNonQueryAsync()>0;
     }
     private static List<SellerRevenuePoint> EmptyHours() => Enumerable.Range(0, 24).Select(hour => new SellerRevenuePoint { Time = $"{hour:00}:00", Revenue = 0 }).ToList();
