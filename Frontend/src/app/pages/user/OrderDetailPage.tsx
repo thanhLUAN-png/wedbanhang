@@ -34,7 +34,16 @@ export default function OrderDetailPage() {
     if(!phone){setLoading(false);return;}
     fetch(`/seller-api/customer/orders?phone=${encodeURIComponent(phone)}`).then(r=>r.ok?r.json():[]).then(rows=>{
       const found=rows.find((x:any)=>x.id===id);
-      if(found)setOrder({id:found.id,status:(found.status==="completed"?"delivered":found.status) as OrderStatus,items:found.items.map((item:any)=>({...item,id:String(item.id)})),subtotal:found.subtotal,shippingFee:found.shippingFee,discount:found.discount,total:found.total,address:{name:found.customerName,phone:found.phone,street:found.deliveryAddress,district:"",city:""},paymentMethod:found.paymentMethod,note:found.note,createdAt:found.createdAt,updatedAt:found.updatedAt});
+      if(found){
+        const rawStatus = found.status;
+        const mappedStatus = (
+          rawStatus==="completed" ? "delivered" :
+          rawStatus==="arrived"   ? "confirmed" :
+          rawStatus==="handed_over" ? "confirmed" :
+          rawStatus
+        ) as OrderStatus;
+        setOrder({id:found.id,status:mappedStatus,items:found.items.map((item:any)=>({...item,id:String(item.id)})),subtotal:found.subtotal,shippingFee:found.shippingFee,discount:found.discount,total:found.total,address:{name:found.customerName,phone:found.phone,street:found.deliveryAddress,district:"",city:""},paymentMethod:found.paymentMethod,note:found.note,createdAt:found.createdAt,updatedAt:found.updatedAt});
+      }
     }).finally(()=>setLoading(false));
   },[id]);
 

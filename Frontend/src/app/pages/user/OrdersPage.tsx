@@ -112,7 +112,7 @@ export default function OrdersPage() {
         id: order.id,
         status: (order.status === "completed" ? "delivered" :
           order.status === "arrived" ? "confirmed" :
-          order.status === "handed_over" ? "shipping" :
+          order.status === "handed_over" ? "confirmed" :
           order.status) as OrderStatus,
         items: order.items.map((item: any) => ({ ...item, id: String(item.id) })),
         subtotal: order.subtotal, shippingFee: order.shippingFee, discount: order.discount, total: order.total,
