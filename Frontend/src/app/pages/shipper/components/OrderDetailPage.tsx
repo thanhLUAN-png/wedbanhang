@@ -261,9 +261,7 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
                   onClick={() => setShowCancelModal(true)}
                   className="w-full py-2 border border-red-300 text-red-500 hover:bg-red-50 rounded-xl text-sm transition-colors"
                 >
-                  {["accepted","arrived"].includes(order.status)
-                    ? "Không có hàng / Hủy đơn"
-                    : "Khách bùng / Không giao được"}
+                  Hủy đơn hàng
                 </button>
               )}
             </div>
