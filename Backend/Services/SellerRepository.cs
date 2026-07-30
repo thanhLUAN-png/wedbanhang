@@ -237,23 +237,40 @@ public sealed class SellerRepository(IConfiguration configuration)
         // cancelled: huỷ (shipping -> cancelled)
         var sqlStatus = nextStatus switch
         {
-            "arrived"   => "arrived",
+            "arrived"    => "arrived",
             "delivering" => "shipping",
             "delivered"  => "completed",
             "cancelled"  => "cancelled",
             _ => null
         };
+        if (sqlStatus is null) return false;
+
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+
+        // Hủy đơn được phép từ bất kỳ trạng thái active nào
+        if (nextStatus == "cancelled")
+        {
+            const string cancelSql = """
+                UPDATE o SET Status='cancelled', UpdatedAt=SYSDATETIME()
+                FROM dbo.Orders o JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId
+                WHERE o.OrderId=@orderId AND sh.Phone=@phone
+                  AND o.Status IN ('confirmed','arrived','handed_over','shipping');
+                """;
+            await using var cancelCmd = new SqlCommand(cancelSql, cn);
+            cancelCmd.Parameters.AddWithValue("@orderId", orderId);
+            cancelCmd.Parameters.AddWithValue("@phone", phone);
+            return await cancelCmd.ExecuteNonQueryAsync() == 1;
+        }
+
         var expected = nextStatus switch
         {
             "arrived"    => "confirmed",
             "delivering" => "handed_over",
             "delivered"  => "shipping",
-            "cancelled"  => "shipping",
             _ => null
         };
-        if (sqlStatus is null || expected is null) return false;
-        await using var cn = new SqlConnection(_cs);
-        await cn.OpenAsync();
+        if (expected is null) return false;
         const string sql = """
             UPDATE o SET Status=@next,UpdatedAt=SYSDATETIME()
             FROM dbo.Orders o JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId
