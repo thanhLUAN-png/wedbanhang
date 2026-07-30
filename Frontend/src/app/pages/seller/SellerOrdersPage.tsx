@@ -105,7 +105,10 @@ function OrderCard({
     <>
       <div className={`p-5 transition-colors border rounded-2xl ${cardBgColor[order.status]}`}>
         {/* ── Header row ── */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div
+          className={`flex flex-wrap items-center justify-between gap-2 mb-4 ${isCollapsible ? 'cursor-pointer select-none' : ''}`}
+          onClick={() => isCollapsible && setIsCardExpanded(prev => !prev)}
+        >
           <div className="flex items-center gap-2.5">
             <span className="font-mono text-sm font-bold text-gray-800 tracking-wider">#{order.orderCode}</span>
             <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${sellerStatusColor[order.status]}`}>
@@ -119,12 +122,7 @@ function OrderCard({
                 <span className="text-xs text-gray-400 hidden sm:inline-block">
                   {formatOrderTime(order.createdAt)}
                 </span>
-                <button
-                  onClick={() => setIsCardExpanded(!isCardExpanded)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-800"
-                >
-                  <ChevronDown className="w-5 h-5" />
-                </button>
+                <ChevronDown className="w-5 h-5 text-gray-400" />
               </>
             ) : (
               <>
@@ -132,12 +130,7 @@ function OrderCard({
                   {formatOrderTime(order.createdAt)} · Thanh toán bằng {paymentLabel[order.paymentMethod]}
                 </span>
                 {isCollapsible && (
-                  <button
-                    onClick={() => setIsCardExpanded(!isCardExpanded)}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-800"
-                  >
-                    <ChevronUp className="w-5 h-5" />
-                  </button>
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
                 )}
               </>
             )}
