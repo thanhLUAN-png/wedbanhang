@@ -321,7 +321,7 @@ function OrderCard({
       <ConfirmDialog
         open={dialog === "handoff"}
         title="Giao hàng cho Shipper?"
-        message={`Shipper ${order.shipperName ?? ""} đang ở quán. Bạn xác nhận đã giao đủ đơn #${order.orderCode} cho shipper để bắt đầu giao đến khách hàng.`}
+        message="Xác nhận giao hàng cho Shipper."
         confirmLabel="Xác nhận giao"
         confirmClass="bg-green-500 hover:bg-green-600"
         onConfirm={() => { setDialog(null); onHandOff(order.id, order.status); }}
