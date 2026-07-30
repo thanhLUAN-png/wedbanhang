@@ -1,0 +1,37 @@
+CREATE   TRIGGER dbo.trg_OrderMessages
+ON dbo.Orders
+AFTER INSERT, UPDATE
+AS
+BEGIN
+ SET NOCOUNT ON;
+ -- Customer greeting when the order is first created
+ INSERT dbo.Conversations(SellerId,CustomerId,ShipperId,OrderId,ParticipantType,ConversationStatus,CreatedAt,LastMessageAt)
+ SELECT r.SellerId,i.CustomerId,NULL,i.OrderId,N'customer',N'active',SYSDATETIME(),SYSDATETIME()
+ FROM inserted i JOIN dbo.Restaurants r ON r.RestaurantId=i.RestaurantId
+ WHERE NOT EXISTS(SELECT 1 FROM dbo.Conversations c WHERE c.OrderId=i.OrderId AND c.ParticipantType=N'customer');
+
+ INSERT dbo.Messages(ConversationId,SenderType,Content,MessageType,IsRead,SentAt)
+ SELECT c.ConversationId,N'seller',CONCAT(N'C?m õn ',cu.FullName,N' ð? ð?t món t?i ',r.Name,N'. Quán ð? nh?n ðõn #',i.OrderCode,N' và s? chu?n b? s?m nh?t.'),N'system',0,SYSDATETIME()
+ FROM inserted i JOIN dbo.Restaurants r ON r.RestaurantId=i.RestaurantId JOIN dbo.Customers cu ON cu.CustomerId=i.CustomerId JOIN dbo.Conversations c ON c.OrderId=i.OrderId AND c.ParticipantType=N'customer'
+ WHERE NOT EXISTS(SELECT 1 FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId AND m.MessageType=N'system');
+
+ -- Shipper greeting once a shipper receives the order
+ INSERT dbo.ShipperConversations(ShipperId,CustomerId,SellerId,OrderId,ParticipantType,ConversationStatus,CreatedAt,LastMessageAt)
+ SELECT i.ShipperId,NULL,r.SellerId,i.OrderId,N'seller',N'active',SYSDATETIME(),SYSDATETIME()
+ FROM inserted i JOIN dbo.Restaurants r ON r.RestaurantId=i.RestaurantId
+ WHERE i.ShipperId IS NOT NULL AND i.Status IN (N'shipping',N'delivering') AND NOT EXISTS(SELECT 1 FROM dbo.ShipperConversations c WHERE c.OrderId=i.OrderId AND c.ParticipantType=N'seller');
+ 
+ INSERT dbo.ShipperMessages(ShipperConversationId,SenderType,Content,MessageType,IsRead,SentAt)
+ SELECT c.ShipperConversationId,N'seller',CONCAT(N'C?m õn ',sh.FullName,N' ð? h? tr? giao ðõn #',i.OrderCode,N'. Nh? anh/ch? giúp quán giao ð?n khách an toàn và ðúng gi?.'),N'system',0,SYSDATETIME()
+ FROM inserted i JOIN dbo.Shippers sh ON sh.ShipperId=i.ShipperId JOIN dbo.ShipperConversations c ON c.OrderId=i.OrderId AND c.ParticipantType=N'seller'
+ WHERE i.ShipperId IS NOT NULL AND i.Status IN (N'shipping',N'delivering') AND NOT EXISTS(SELECT 1 FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId AND m.MessageType=N'system');
+
+ -- Customer thank-you once completed
+ INSERT dbo.Messages(ConversationId,SenderType,Content,MessageType,IsRead,SentAt)
+ SELECT c.ConversationId,N'seller',CONCAT(N'C?m õn ',cu.FullName,N' ð? ?ng h? quán. Chúc ',cu.FullName,N' ngon mi?ng và mong ðý?c ph?c v? b?n l?n sau!'),N'completion',0,SYSDATETIME()
+ FROM inserted i JOIN dbo.Customers cu ON cu.CustomerId=i.CustomerId JOIN dbo.Conversations c ON c.OrderId=i.OrderId AND c.ParticipantType=N'customer'
+ WHERE i.Status=N'completed' AND NOT EXISTS(SELECT 1 FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId AND m.MessageType=N'completion');
+END
+
+
+(1 rows affected)

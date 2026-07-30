@@ -128,7 +128,7 @@ public sealed class SellerRepository(IConfiguration configuration)
                 byId[id] = index;
                 result.Add(new SellerOrderListItem
                 {
-                    Id = id.ToString(), OrderCode = reader.GetString(1), Status = reader.GetString(2), PaymentMethod = reader.GetString(3),
+                    Id = id.ToString(), OrderCode = reader.GetString(1), Status = reader.GetString(2) == "handed_over" ? "shipping" : reader.GetString(2), PaymentMethod = reader.GetString(3),
                     DeliveryAddress = reader.GetString(4), Note = reader.GetString(5) == "0" ? "" : reader.GetString(5), Total = reader.GetDecimal(6), OrderedAt = reader.GetDateTime(7),
                     CustomerName = reader.GetString(8), CustomerPhone = reader.GetString(9), ShipperName = reader.IsDBNull(10) ? null : reader.GetString(10)
                 });
