@@ -219,10 +219,17 @@ function OrderCard({
                   </button>
                 </div>
               ) : order.status === "confirmed" ? (
-                <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
-                  <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
-                  <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
-                </div>
+                order.shipperName ? (
+                  <div className="flex items-center gap-2 text-xs bg-orange-50 border border-orange-100 px-3 py-2 rounded-lg mt-2 w-max">
+                    <Bike className="w-4 h-4 text-orange-400 animate-pulse" />
+                    <span className="text-orange-600 font-medium">Shipper đang trên đường tới...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
+                    <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
+                    <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
+                  </div>
+                )
               ) : order.status === "pending" ? (
                 <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
                   <Bike className="w-4 h-4 text-gray-400 animate-pulse" />
@@ -256,24 +263,15 @@ function OrderCard({
                 </div>
               )}
 
-              {/* CONFIRMED + có shipper: nút Giao hàng xanh; chưa có shipper: nút xám */}
+              {/* CONFIRMED: luôn xám – dù có shipper hay chưa, phải đợi shipper tới quán */}
               {order.status === "confirmed" && (
                 <div className="flex flex-col gap-2 items-end">
-                  {order.shipperName ? (
-                    <button
-                      onClick={() => setDialog("handoff")}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all shadow-sm"
-                    >
-                      <CheckCircle className="w-4 h-4" /> Giao hàng cho Shipper
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed"
-                    >
-                      <Bike className="w-4 h-4" /> Chờ Shipper
-                    </button>
-                  )}
+                  <button
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed"
+                  >
+                    <Bike className="w-4 h-4" /> {order.shipperName ? "Chờ Shipper tới quán" : "Chờ Shipper"}
+                  </button>
                 </div>
               )}
 
