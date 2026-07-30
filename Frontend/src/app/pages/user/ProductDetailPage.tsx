@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router";
 import { Star, Heart, ShoppingCart, ChevronRight, Store, MessageCircle, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { mockShopProducts } from "../../data/mockShopProducts";
+import type { ShopProduct } from "../../data/mockShopProducts";
 import { ProductCard } from "../../components/user/ProductCard";
 import { useCart } from "../../context/CartContext";
 
@@ -14,12 +15,82 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem, toggleWishlist, isInWishlist } = useCart();
-  const product = mockShopProducts.find((p) => p.id === id);
+  const mockProduct = mockShopProducts.find((p) => p.id === id);
+  const [sqlProduct, setSqlProduct] = useState<ShopProduct | undefined>();
+  const [sqlRelated, setSqlRelated] = useState<ShopProduct[]>([]);
+  const [loading, setLoading] = useState(Boolean(id?.startsWith("sql-product-")));
+  const product = mockProduct || sqlProduct;
 
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
+  const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("specs");
   const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!id?.startsWith("sql-product-")) {
+      setLoading(false);
+      return;
+    }
+    const wantedId = Number(id.replace("sql-product-", ""));
+    setLoading(true);
+    fetch("/seller-api/public/catalog")
+      .then(response => {
+        if (!response.ok) throw new Error("Không thể tải sản phẩm");
+        return response.json();
+      })
+      .then(data => {
+        const mapProduct = (item: any): ShopProduct => {
+          let toppings: Array<{ name: string; price: number }> = [];
+          try {
+            const parsed = JSON.parse(item.toppingsJson || "[]");
+            if (Array.isArray(parsed)) toppings = parsed;
+          } catch {
+            toppings = [];
+          }
+          const image = item.imageUrl || "https://placehold.co/500x500/f8fafc/f97316?text=MON+AN";
+          return {
+            id: `sql-product-${item.id}`,
+            name: item.name,
+            slug: `sql-product-${item.id}`,
+            price: Number(item.price),
+            image,
+            images: [image],
+            rating: Number(item.shopRating || 0),
+            reviewCount: 0,
+            sold: 0,
+            stock: 999,
+            category: item.category || "Khác",
+            categoryId: String(item.category || "khac").toLowerCase(),
+            shopId: `sql-shop-${item.shopId}`,
+            shopName: item.shopName,
+            shopAvatar: item.shopLogoUrl || "https://placehold.co/160x160/fff7ed/f97316?text=QUAN",
+            shopRating: Number(item.shopRating || 0),
+            shopFollowers: 0,
+            restaurantId: Number(item.shopId),
+            toppings: toppings.map(t => ({name:String(t.name),price:Number(t.price)})),
+            description: item.description || "",
+            specifications: [
+              { label: "Mô tả", value: item.description || "Chưa có mô tả" },
+              ...(toppings.length ? [{
+                label: "Topping",
+                value: toppings.map(t => `${t.name} (+${formatVND(Number(t.price))})`).join(", "),
+              }] : []),
+            ],
+            tags: [],
+          };
+        };
+        const rows = (data.products || []).map(mapProduct);
+        const found = rows.find((item: ShopProduct) => item.id === `sql-product-${wantedId}`);
+        setSqlProduct(found);
+        setSqlRelated(found ? rows.filter((item: ShopProduct) => item.category === found.category && item.id !== found.id).slice(0, 5) : []);
+      })
+      .catch(() => {
+        setSqlProduct(undefined);
+        setSqlRelated([]);
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
   function startAutoSlide(images: string[]) {
     if (images.length <= 1) return;
@@ -41,6 +112,10 @@ export default function ProductDetailPage() {
     startAutoSlide(images);
   }
 
+  if (loading) {
+    return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-gray-500">Đang tải món ăn từ SQL Server...</div>;
+  }
+
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
@@ -52,17 +127,23 @@ export default function ProductDetailPage() {
     );
   }
 
-  const related = mockShopProducts.filter((p) => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 5);
+  const related = id?.startsWith("sql-product-")
+    ? sqlRelated
+    : mockShopProducts.filter((p) => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 5);
   const wishlisted = isInWishlist(product.id);
   const discount = product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
 
   function handleAddToCart() {
-    addItem(product, qty);
+    const chosen = (product.toppings || []).filter(t => selectedToppings.includes(t.name));
+    const toppingTotal = chosen.reduce((sum,t)=>sum+t.price,0);
+    addItem({...product,price:product.price+toppingTotal}, qty, chosen.length ? `Topping: ${chosen.map(t=>`${t.name} (+${formatVND(t.price)})`).join(", ")}` : undefined);
     toast.success(`Đã thêm ${qty} sản phẩm vào giỏ hàng`);
   }
 
   function handleBuyNow() {
-    addItem(product, qty);
+    const chosen = (product.toppings || []).filter(t => selectedToppings.includes(t.name));
+    const toppingTotal = chosen.reduce((sum,t)=>sum+t.price,0);
+    addItem({...product,price:product.price+toppingTotal}, qty, chosen.length ? `Topping: ${chosen.map(t=>`${t.name} (+${formatVND(t.price)})`).join(", ")}` : undefined);
     navigate("/cart");
   }
 
@@ -71,6 +152,7 @@ export default function ProductDetailPage() {
     { id: 2, user: "Trần Thị C", rating: 4, comment: "Chất lượng ổn, giá hợp lý. Shop đóng gói cẩn thận.", date: "08/07/2026", variant: "" },
     { id: 3, user: "Lê Minh D", rating: 5, comment: "Mua lần 2 rồi, lần nào cũng ưng. Sẽ tiếp tục ủng hộ shop!", date: "05/07/2026", variant: "" },
   ];
+  const reviews = id?.startsWith("sql-product-") ? [] : mockReviews;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-5">
@@ -128,6 +210,23 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
+            {(product.toppings || []).length > 0 && (
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-2">Chọn topping</div>
+                <div className="space-y-2">
+                  {(product.toppings || []).map(topping => (
+                    <label key={topping.name} className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-orange-300">
+                      <span className="flex items-center gap-3 text-sm text-gray-700">
+                        <input type="checkbox" checked={selectedToppings.includes(topping.name)} onChange={()=>setSelectedToppings(current=>current.includes(topping.name)?current.filter(name=>name!==topping.name):[...current,topping.name])} className="accent-orange-500"/>
+                        {topping.name}
+                      </span>
+                      <span className="text-sm font-medium text-orange-500">+{formatVND(topping.price)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Qty */}
             <div>
               <div className="text-sm font-medium text-gray-700 mb-2">Số lượng</div>
@@ -141,7 +240,6 @@ export default function ProductDetailPage() {
                     <Plus className="h-4 w-4 text-gray-600" />
                   </button>
                 </div>
-                <span className="text-sm text-gray-400">{product.stock} sản phẩm có sẵn</span>
               </div>
             </div>
 
@@ -188,7 +286,7 @@ export default function ProductDetailPage() {
       {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-8">
         <div className="flex border-b border-gray-100 mb-5">
-          {[{ id: "specs", label: "Mô tả sản phẩm" }, { id: "reviews", label: `Đánh giá (${mockReviews.length})` }].map((t) => (
+          {[{ id: "specs", label: "Mô tả sản phẩm" }, { id: "reviews", label: `Đánh giá (${reviews.length})` }].map((t) => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${activeTab === t.id ? "border-orange-500 text-orange-500" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
               {t.label}
             </button>
@@ -218,7 +316,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
             <div className="space-y-4">
-              {mockReviews.map((r) => (
+              {reviews.map((r) => (
                 <div key={r.id} className="border-b border-gray-100 pb-4 last:border-0">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-sm font-medium text-orange-600">
@@ -236,6 +334,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-700">{r.comment}</p>
                 </div>
               ))}
+              {reviews.length === 0 && <p className="py-6 text-center text-sm text-gray-500">Chưa có đánh giá.</p>}
             </div>
           </div>
         )}

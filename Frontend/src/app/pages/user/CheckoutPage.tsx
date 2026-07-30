@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link, useLocation } from "react-router";
 import { ChevronRight, MapPin, CreditCard, Truck, Check, Loader2, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "../../context/CartContext";
@@ -18,14 +18,23 @@ const paymentMethods = [
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+  const checkoutDiscount = Math.max(0, Number((location.state as any)?.discount || 0));
+  const promotionCode = String((location.state as any)?.promotionCode || "");
+  const promotionRestaurantId = Number((location.state as any)?.promotionRestaurantId || 0) || null;
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
-  const [address, setAddress] = useState({ name: "Nguyễn Văn An", phone: "0901234567", street: "123 Nguyễn Huệ", district: "Quận 1", city: "TP. Hồ Chí Minh" });
+  const [address, setAddress] = useState(() => {
+    try {
+      const user=JSON.parse(localStorage.getItem("user")||"{}");
+      return {name:user.name||"",phone:user.phone||"",street:"",district:"",city:""};
+    } catch { return {name:"",phone:"",street:"",district:"",city:""}; }
+  });
   const [editingAddress, setEditingAddress] = useState(false);
 
   const shippingFee = total >= 99000 ? 0 : 30000;
-  const finalTotal = total + shippingFee;
+  const finalTotal = Math.max(0,total + shippingFee - checkoutDiscount);
 
   async function handlePlaceOrder() {
     if (!address.name || !address.phone || !address.street || !address.city) {
@@ -33,11 +42,20 @@ export default function CheckoutPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setLoading(false);
-    clearCart();
-    toast.success("Đặt hàng thành công! Cảm ơn bạn đã mua hàng 🎉");
-    navigate("/profile?tab=orders");
+    try {
+      const response=await fetch("/seller-api/customer/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        customerName:address.name,phone:address.phone,
+        deliveryAddress:[address.street,address.district,address.city].filter(Boolean).join(", "),
+        paymentMethod,note,shippingFee,discount:checkoutDiscount,promotionRestaurantId,
+        items:items.map(item=>({restaurantId:item.product.restaurantId,productId:item.product.id,productName:item.product.name,productImage:item.product.image,variant:item.variant,price:item.product.price,quantity:item.quantity}))
+      })});
+      const body=await response.json().catch(()=>null);
+      if(!response.ok)throw new Error(body?.error||"Không thể lưu đơn hàng.");
+      clearCart();
+      toast.success(`Đặt hàng thành công: ${body.orderCodes.join(", ")}`);
+      navigate("/orders");
+    } catch(error) { toast.error(error instanceof Error?error.message:"Không thể đặt hàng."); }
+    finally { setLoading(false); }
   }
 
   if (items.length === 0) {
@@ -169,6 +187,7 @@ export default function CheckoutPage() {
                   <img src={item.product.image} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-50 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/48x48/f1f5f9/94a3b8?text=SP"; }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-gray-800 line-clamp-2 leading-snug">{item.product.name}</div>
+                    {item.variant && <div className="text-[11px] text-gray-500 mt-0.5">{item.variant}</div>}
                     <div className="text-xs text-gray-500 mt-0.5">x{item.quantity}</div>
                   </div>
                   <div className="text-xs font-semibold text-orange-500 shrink-0">{formatVND(item.product.price * item.quantity)}</div>
@@ -183,6 +202,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-gray-600">
                 <span>Vận chuyển</span><span className={shippingFee === 0 ? "text-green-600" : ""}>{shippingFee === 0 ? "Miễn phí" : formatVND(shippingFee)}</span>
               </div>
+              {checkoutDiscount>0&&<div className="flex justify-between text-green-600"><span>Mã {promotionCode}</span><span>-{formatVND(checkoutDiscount)}</span></div>}
               <div className="flex justify-between font-bold text-base border-t border-gray-100 pt-3">
                 <span>Tổng cộng</span>
                 <span className="text-orange-500">{formatVND(finalTotal)}</span>

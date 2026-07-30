@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, MessageCircle, ChevronRight, Bike, User, ChevronDown, ChevronUp, CheckCircle, Truck, X } from "lucide-react";
+import { Search, MessageCircle, ChevronRight, Bike, User, ChevronDown, ChevronUp, CheckCircle, X } from "lucide-react";
 import { useNavigate } from "react-router";
 import { sellerStatusLabel, sellerStatusColor, type SellerOrderStatus, type SellerOrder } from "../../data/mockSellerData";
 
@@ -83,19 +83,17 @@ function ConfirmDialog({
 function OrderCard({
   order,
   onConfirm,
-  onStartShipping,
   onCancel,
 }: {
   order: SellerOrder;
   onConfirm: (id: string) => void;
-  onStartShipping: (id: string) => void;
   onCancel: (id: string) => void;
 }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const isCollapsible = order.status === "shipping" || order.status === "completed";
   const [isCardExpanded, setIsCardExpanded] = useState(!isCollapsible);
-  const [dialog, setDialog] = useState<null | "confirm" | "shipping" | "cancel">(null);
+  const [dialog, setDialog] = useState<null | "confirm" | "cancel">(null);
 
   const displayedItems = isExpanded ? order.items : order.items.slice(0, 3);
   const hiddenCount = order.items.length - 3;
@@ -268,23 +266,6 @@ function OrderCard({
                 </div>
               )}
 
-              {/* CONFIRMED: Đang làm món – shipper đến lấy → bắt đầu giao */}
-              {order.status === "confirmed" && (
-                <div className="flex flex-col gap-2 items-end">
-                  <button
-                    disabled={!order.shipperName}
-                    onClick={() => setDialog("shipping")}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm ${
-                      order.shipperName
-                        ? "bg-blue-500 text-white hover:bg-blue-600"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <Truck className="w-4 h-4" /> Bắt đầu giao hàng
-                  </button>
-                </div>
-              )}
-
               {/* OTHER: Chi tiết */}
               {(order.status === "returned" || order.status === "cancelled") && (
                 <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 px-4 py-2 rounded-xl hover:border-gray-300 transition-colors">
@@ -306,17 +287,6 @@ function OrderCard({
         confirmLabel="Xác nhận"
         confirmClass="bg-orange-500 hover:bg-orange-600"
         onConfirm={() => { setDialog(null); onConfirm(order.id); }}
-        onCancel={() => setDialog(null)}
-      />
-
-      {/* Dialog bắt đầu giao */}
-      <ConfirmDialog
-        open={dialog === "shipping"}
-        title="Bắt đầu giao hàng?"
-        message={`Xác nhận shipper đã lấy đơn #${order.orderCode} và đang trên đường giao đến khách.`}
-        confirmLabel="Giao hàng"
-        confirmClass="bg-blue-500 hover:bg-blue-600"
-        onConfirm={() => { setDialog(null); onStartShipping(order.id); }}
         onCancel={() => setDialog(null)}
       />
 
@@ -343,7 +313,7 @@ export default function SellerOrdersPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/seller-api/seller/orders?sellerCode=SL-BT-0001")
+    const load = () => fetch("/seller-api/seller/orders?sellerCode=SL-BT-0001")
       .then(async response => {
         if (!response.ok) throw new Error();
         return response.json();
@@ -360,18 +330,31 @@ export default function SellerOrdersPage() {
       } as SellerOrder))))
       .catch(() => setError("Không thể tải đơn hàng từ SQL Server."))
       .finally(() => setLoading(false));
+    void load();
+    const timer = window.setInterval(() => void load(), 5000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  const handleConfirm = (id: string) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "confirmed" } : o));
+  const updateOrderStatus = async (id: string, status: "confirmed" | "shipping" | "cancelled") => {
+    const response = await fetch(`/seller-api/seller/orders/${encodeURIComponent(id)}/status?sellerCode=SL-BT-0001`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+      setError("Trạng thái đơn đã thay đổi. Vui lòng tải lại danh sách.");
+      return;
+    }
+    setError("");
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
-  const handleStartShipping = (id: string) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "shipping" } : o));
+  const handleConfirm = (id: string) => {
+    void updateOrderStatus(id, "confirmed");
   };
 
   const handleCancel = (id: string) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "cancelled" } : o));
+    void updateOrderStatus(id, "cancelled");
   };
 
   const filtered = orders.filter(o => {
@@ -431,7 +414,6 @@ export default function SellerOrdersPage() {
               key={order.id}
               order={order}
               onConfirm={handleConfirm}
-              onStartShipping={handleStartShipping}
               onCancel={handleCancel}
             />
           ))}

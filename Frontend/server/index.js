@@ -67,6 +67,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
       const demoPassword = bcrypt.hashSync('123456', 10);
       const accounts = [
         ['Nguyễn Văn A', 'nguyenvana.seller@shopviet.vn', '0987654321', demoPassword, 'seller'],
+        ['Nguyễn Minh Khách', 'khachhang@shopviet.vn', '0909000001', demoPassword, 'buyer'],
         ['Nguyễn Văn Nam', 'seller@example.com', '0912000001', demoPassword, 'seller'],
         ['Trần Văn Shipper', 'shipper@example.com', '0909123456', demoPassword, 'shipper'],
         ['Quản trị viên', 'admin@shopviet.vn', '0901999999', demoPassword, 'admin'],

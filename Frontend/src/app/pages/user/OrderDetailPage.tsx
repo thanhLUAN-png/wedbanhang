@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { ChevronRight, Package, Truck, CheckCircle, XCircle, Clock, MapPin, CreditCard, ArrowLeft } from "lucide-react";
-import { mockOrders, statusLabel, statusColor, type OrderStatus } from "../../data/mockOrders";
+import { statusLabel, statusColor, type Order, type OrderStatus } from "../../data/mockOrders";
 import { toast } from "sonner";
 
 function formatVND(v: number) {
@@ -24,7 +25,19 @@ const statusSteps: { status: OrderStatus; label: string; icon: React.ComponentTy
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const order = mockOrders.find(o => o.id === id);
+  const [order,setOrder]=useState<Order|undefined>();
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{
+    let phone="";
+    try{phone=JSON.parse(localStorage.getItem("user")||"{}").phone||""}catch{}
+    if(!phone){setLoading(false);return;}
+    fetch(`/seller-api/customer/orders?phone=${encodeURIComponent(phone)}`).then(r=>r.ok?r.json():[]).then(rows=>{
+      const found=rows.find((x:any)=>x.id===id);
+      if(found)setOrder({id:found.id,status:(found.status==="completed"?"delivered":found.status) as OrderStatus,items:found.items.map((item:any)=>({...item,id:String(item.id)})),subtotal:found.subtotal,shippingFee:found.shippingFee,discount:found.discount,total:found.total,address:{name:found.customerName,phone:found.phone,street:found.deliveryAddress,district:"",city:""},paymentMethod:found.paymentMethod,note:found.note,createdAt:found.createdAt,updatedAt:found.updatedAt});
+    }).finally(()=>setLoading(false));
+  },[id]);
+
+  if(loading)return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">Đang tải đơn hàng từ SQL Server...</div>;
 
   if (!order) {
     return (
@@ -153,9 +166,9 @@ export default function OrderDetailPage() {
         </div>
 
         {/* Actions */}
-        {(order.status === "pending" || order.status === "confirmed") && (
+        {order.status === "pending" && (
           <button
-            onClick={() => { toast.success("Đã hủy đơn hàng"); navigate("/profile?tab=orders"); }}
+            onClick={async () => {let phone="";try{phone=JSON.parse(localStorage.getItem("user")||"{}").phone||""}catch{}const response=await fetch(`/seller-api/customer/orders/${encodeURIComponent(order.id)}/cancel?phone=${encodeURIComponent(phone)}`,{method:"PUT"});if(response.ok){toast.success("Đã hủy đơn hàng");navigate("/orders")}else toast.error("Không thể hủy đơn hàng.");}}
             className="w-full py-3 border-2 border-red-300 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
           >
             Hủy đơn hàng

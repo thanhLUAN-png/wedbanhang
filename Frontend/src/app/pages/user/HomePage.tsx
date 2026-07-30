@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import {
@@ -12,11 +12,9 @@ import {
 import { ProductCard } from "../../components/user/ProductCard";
 import {
   categories,
-  featuredProducts,
-  flashSaleProducts,
   mockShopProducts,
-  shops,
 } from "../../data/mockShopProducts";
+import type { Shop, ShopProduct } from "../../data/mockShopProducts";
 import { getPromoNotifications, savePromoNotifications, type Notification } from "../../data/mockNotifications";
 
 const uniqueFoodAssets = import.meta.glob("../../../assets/food-unique/*.png", {
@@ -317,7 +315,64 @@ function Hero() {
 }
 
 export default function HomePage() {
-  const quickDeals = flashSaleProducts.slice(0, 3);
+  const [sqlShops, setSqlShops] = useState<Shop[]>([]);
+  const [sqlProducts, setSqlProducts] = useState<ShopProduct[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/seller-api/public/catalog")
+      .then(response => {
+        if (!response.ok) throw new Error("Không thể tải thực đơn");
+        return response.json();
+      })
+      .then(data => {
+        const loadedShops: Shop[] = (data.shops || []).map((shop: any) => ({
+          id: `sql-shop-${shop.id}`,
+          name: shop.name,
+          avatar: shop.logoUrl || "https://placehold.co/160x160/fff7ed/f97316?text=QUAN",
+          banner: shop.logoUrl || "https://placehold.co/900x360/fff7ed/f97316?text=QUAN+AN",
+          rating: Number(shop.rating || 0),
+          followers: Number(shop.ratingCount || 0),
+          totalProducts: (data.products || []).filter((product: any) => product.shopId === shop.id).length,
+          responseRate: "0%",
+          location: shop.address || "Chưa cập nhật địa chỉ",
+          joinedAt: "",
+        }));
+        const loadedProducts: ShopProduct[] = (data.products || []).map((product: any) => ({
+          id: `sql-product-${product.id}`,
+          name: product.name,
+          slug: `sql-product-${product.id}`,
+          price: Number(product.price),
+          image: product.imageUrl || "https://placehold.co/500x500/f8fafc/f97316?text=MON+AN",
+          images: [product.imageUrl || "https://placehold.co/500x500/f8fafc/f97316?text=MON+AN"],
+          rating: Number(product.shopRating || 0),
+          reviewCount: 0,
+          sold: 0,
+          stock: 999,
+          category: product.category || "Khác",
+          categoryId: String(product.category || "khac").toLowerCase(),
+          shopId: `sql-shop-${product.shopId}`,
+          shopName: product.shopName,
+          shopAvatar: product.shopLogoUrl || "https://placehold.co/160x160/fff7ed/f97316?text=QUAN",
+          shopRating: Number(product.shopRating || 0),
+          shopFollowers: 0,
+          restaurantId: Number(product.shopId),
+          toppings: (() => { try { const value=JSON.parse(product.toppingsJson||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } })(),
+          description: product.description || "",
+          specifications: [],
+          tags: [],
+        }));
+        setSqlShops(loadedShops);
+        setSqlProducts(loadedProducts);
+      })
+      .catch(() => {
+        setSqlShops([]);
+        setSqlProducts([]);
+      })
+      .finally(() => setCatalogLoading(false));
+  }, []);
+
+  const quickDeals = sqlProducts.slice(0, 3);
 
   return (
     <div className="bg-[#faf9f7]">
@@ -344,7 +399,7 @@ export default function HomePage() {
         <section>
           <SectionHeading eyebrow="Đang mở cửa" title="Quán ngon gần bạn" description="Được khách quanh khu vực đặt nhiều trong hôm nay" />
           <div className="grid gap-4 md:grid-cols-3">
-            {shops.slice(0, 3).map((shop, index) => (
+            {sqlShops.slice(0, 3).map((shop, index) => (
               <Link key={shop.id} to={`/shop/${shop.id}`} className="group overflow-hidden rounded-3xl border border-slate-200 bg-white hover:border-orange-200 hover:shadow-lg hover:shadow-orange-950/5">
                 <div className="relative h-36 overflow-hidden">
                   <img src={shop.banner} alt={shop.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -365,6 +420,11 @@ export default function HomePage() {
                 </div>
               </Link>
             ))}
+            {!catalogLoading && sqlShops.length === 0 && (
+              <p className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+                Hiện chưa có quán nào đang hoạt động.
+              </p>
+            )}
           </div>
         </section>
 
@@ -387,20 +447,23 @@ export default function HomePage() {
                 </div>
               </Link>
             ))}
+            {!catalogLoading && quickDeals.length === 0 && <p className="text-sm text-white/60">Chưa có món đang bán.</p>}
           </div>
         </section>
 
         <section>
           <SectionHeading eyebrow="Khách đặt nhiều" title="Món nổi bật hôm nay" description="Những lựa chọn khó sai cho bữa ăn đầu tiên" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {featuredProducts.slice(0, 5).map(product => <ProductCard key={product.id} product={product} />)}
+            {sqlProducts.slice(0, 5).map(product => <ProductCard key={product.id} product={product} />)}
+            {!catalogLoading && sqlProducts.length === 0 && <p className="col-span-full text-sm text-slate-500">Chưa có món từ quán đang hoạt động.</p>}
           </div>
         </section>
 
         <section>
           <SectionHeading eyebrow="Gợi ý riêng" title="Đổi món một chút nhé" description="Thêm vài lựa chọn khác từ các quán đang phục vụ" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {mockShopProducts.slice(5, 10).map(product => <ProductCard key={product.id} product={product} />)}
+            {sqlProducts.slice(5, 10).map(product => <ProductCard key={product.id} product={product} />)}
+            {!catalogLoading && sqlProducts.length <= 5 && <p className="col-span-full text-sm text-slate-500">Chưa có thêm món gợi ý.</p>}
           </div>
         </section>
       </div>

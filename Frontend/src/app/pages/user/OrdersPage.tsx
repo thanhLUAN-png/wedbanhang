@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { ChevronRight, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
-import { mockOrders, statusLabel, statusColor, type Order } from "../../data/mockOrders";
+import { statusLabel, statusColor, type Order, type OrderStatus } from "../../data/mockOrders";
 
 function formatVND(v: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
@@ -10,18 +10,34 @@ function formatVND(v: number) {
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState<string>("all");
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading,setLoading]=useState(true);
+  const [loadError,setLoadError]=useState("");
+  const user=(()=>{try{return JSON.parse(localStorage.getItem("user")||"{}")}catch{return {}}})();
+  const loadOrders=async()=>{
+    if(!user.phone){setLoadError("Vui lòng đăng nhập tài khoản có số điện thoại để xem đơn hàng.");setLoading(false);return;}
+    try{
+      const response=await fetch(`/seller-api/customer/orders?phone=${encodeURIComponent(user.phone)}`);
+      if(!response.ok)throw new Error();
+      const rows=await response.json();
+      setOrders(rows.map((order:any)=>({
+        id:order.id,status:(order.status==="completed"?"delivered":order.status) as OrderStatus,
+        items:order.items.map((item:any)=>({...item,id:String(item.id)})),
+        subtotal:order.subtotal,shippingFee:order.shippingFee,discount:order.discount,total:order.total,
+        address:{name:order.customerName,phone:order.phone,street:order.deliveryAddress,district:"",city:""},
+        paymentMethod:order.paymentMethod,note:order.note,createdAt:order.createdAt,updatedAt:order.updatedAt
+      })));
+    }catch{setLoadError("Không thể tải đơn hàng từ SQL Server.");}
+    finally{setLoading(false);}
+  };
+  useEffect(()=>{void loadOrders()},[]);
   const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
 
-  const cancelOrder = (orderId: string) => {
+  const cancelOrder = async (orderId: string) => {
     if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này không?")) return;
-
-    setOrders(current => current.map(order =>
-      order.id === orderId && order.status === "pending"
-        ? { ...order, status: "cancelled", updatedAt: new Date().toISOString() }
-        : order
-    ));
-    toast.success("Đã hủy đơn hàng");
+    const response=await fetch(`/seller-api/customer/orders/${encodeURIComponent(orderId)}/cancel?phone=${encodeURIComponent(user.phone)}`,{method:"PUT"});
+    if(!response.ok){toast.error("Không thể hủy đơn hàng.");return;}
+    await loadOrders();toast.success("Đã hủy đơn hàng");
   };
 
   return (
@@ -47,7 +63,9 @@ export default function OrdersPage() {
 
         {/* Order List */}
         <div className="space-y-4">
-          {filtered.length === 0 ? (
+          {loading&&<div className="text-center py-12 text-gray-500">Đang tải đơn hàng từ SQL Server...</div>}
+          {loadError&&<div className="text-center py-6 text-red-500">{loadError}</div>}
+          {!loading&&!loadError&&filtered.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
               <PackageOpen className="h-12 w-12 mx-auto text-gray-300 mb-3" />
               <p>Chưa có đơn hàng nào</p>

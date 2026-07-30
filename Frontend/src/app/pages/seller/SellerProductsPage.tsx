@@ -124,6 +124,7 @@ function ManageCategoriesModal({
 
 // ── Modal thêm món mới ──
 function AddProductModal({ onClose, type, categories, initialProduct, onSave }: { onClose: () => void; type: "single" | "combo", categories: string[], initialProduct?: any, onSave: (product: any) => void }) {
+  const [toppingError, setToppingError] = useState("");
   const [form, setForm] = useState({
     name: initialProduct?.name || "", 
     category: initialProduct?.category || (categories[0] || "Cơm"), 
@@ -154,6 +155,30 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
 
   const removeTopping = (idx: number) => {
     setForm(f => ({ ...f, toppings: f.toppings.filter((_, i) => i !== idx) }));
+    setToppingError("");
+  };
+
+  const saveProduct = () => {
+    // A topping is an optional row, but once the seller adds it both values are required.
+    // This prevents an accidental second blank row from being saved to SQL Server.
+    const enteredToppings = form.toppings.filter(t => t.name.trim() || String(t.price).replace(/\D/g, ""));
+    const incompleteIndex = enteredToppings.findIndex(t => !t.name.trim() || !String(t.price).replace(/\D/g, ""));
+    if (incompleteIndex >= 0) {
+      setToppingError(`Topping dòng ${incompleteIndex + 1} chưa đủ tên hoặc giá. Hãy nhập đủ hoặc bấm dấu × để xoá dòng đó.`);
+      return;
+    }
+
+    setToppingError("");
+    onSave({
+      ...initialProduct,
+      ...form,
+      type,
+      price: Number(form.price.replace(/\D/g, "")),
+      toppings: enteredToppings.map(t => ({
+        name: t.name.trim(),
+        price: Number(String(t.price).replace(/\D/g, "")),
+      })),
+    });
   };
 
   return (
@@ -320,10 +345,11 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
               Giá bán (₫) <span className="text-red-400">*</span>
             </label>
             <input
-              type="number"
+              type="text"
               placeholder="VD: 55000"
               value={form.price}
-              onChange={e => setForm({ ...form, price: e.target.value })}
+              inputMode="numeric"
+              onChange={e => { const raw = e.target.value.replace(/\D/g, ''); setForm({ ...form, price: raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '' }); }}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400"
             />
           </div>
@@ -331,7 +357,7 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
           {/* Danh sách topping */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Các tuỳ chọn Topping (không bắt buộc)
+              Các tuỳ chọn Topping
             </label>
             <div className="space-y-2">
               {form.toppings.map((topping, idx) => (
@@ -344,17 +370,21 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
                       const toppings = [...form.toppings];
                       toppings[idx].name = e.target.value;
                       setForm({ ...form, toppings });
+                      setToppingError("");
                     }}
                     className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
                   />
                   <input
-                    type="number"
+                    type="text"
                     placeholder="Giá (₫)"
                     value={topping.price}
+                    inputMode="numeric"
                     onChange={e => {
                       const toppings = [...form.toppings];
-                      toppings[idx].price = e.target.value;
+                      const raw = e.target.value.replace(/\D/g, '');
+                      toppings[idx].price = raw ? new Intl.NumberFormat('vi-VN').format(Number(raw)) : '';
                       setForm({ ...form, toppings });
+                      setToppingError("");
                     }}
                     className="w-28 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
                   />
@@ -370,6 +400,7 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
             >
               <Plus className="w-4 h-4" /> Thêm topping
             </button>
+            {toppingError && <p className="mt-2 text-sm text-red-600">{toppingError}</p>}
           </div>
         </div>
 
@@ -382,7 +413,7 @@ function AddProductModal({ onClose, type, categories, initialProduct, onSave }: 
             Hủy
           </button>
           <button
-            onClick={() => onSave({ ...initialProduct, ...form, type, price: Number(form.price) })}
+            onClick={saveProduct}
             className={`px-6 py-2.5 text-sm font-medium text-white rounded-xl transition-colors ${isCombo ? "bg-purple-500 hover:bg-purple-600" : "bg-orange-500 hover:bg-orange-600"}`}
           >
             {isEditing ? "Lưu thay đổi" : (isCombo ? "Tạo Combo" : "Thêm Món")}
@@ -463,7 +494,7 @@ function TrashBinModal({ trashedProducts, onClose, onRestore, onDeleteForever }:
 }
 
 export default function SellerProductsPage() {
-  const [categories, setCategories] = useState(["Cơm", "Bún/Phở", "Nước", "Ăn vặt", "Khác"]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [trashedProducts, setTrashedProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -482,12 +513,33 @@ export default function SellerProductsPage() {
         return response.json();
       })
       .then(data => {
-        const loaded = data.map((p: any) => ({ ...p, type: "single", image: p.image || "https://placehold.co/96x96/f3f4f6/6b7280?text=Mon" }));
+        const loaded = data.map((p: any) => {
+          let toppings: Array<{ name: string; price: number | string }> = [];
+          try {
+            const parsed = JSON.parse(p.toppingsJson || "[]");
+            toppings = Array.isArray(parsed)
+              ? parsed.map((t: any) => ({
+                  name: String(t.name || ""),
+                  price: Number(t.price) > 0 ? new Intl.NumberFormat("vi-VN").format(Number(t.price)) : "",
+                }))
+              : [];
+          } catch {
+            toppings = [];
+          }
+          return { ...p, toppings, type: p.type || "single", image: p.image || "https://placehold.co/96x96/f3f4f6/6b7280?text=Mon" };
+        });
         setProducts(loaded);
         setCategories(current => Array.from(new Set([...current, ...loaded.map((p: any) => p.category)])));
       })
       .catch(error => setSaveError(error.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/seller-api/seller/product-categories?sellerCode=SL-BT-0001")
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => { if (rows.length) setCategories(rows.map((x: any) => x.name)); })
+      .catch(() => {});
   }, []);
 
   const filtered = products.filter(p => {
@@ -691,14 +743,19 @@ export default function SellerProductsPage() {
           categories={categories}
           onClose={() => setModal(null)}
           onAdd={name => {
-            if (!categories.includes(name)) setCategories([...categories, name]);
+            if (categories.includes(name)) return;
+            fetch("/seller-api/seller/product-categories?sellerCode=SL-BT-0001", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) })
+              .then(r => { if (!r.ok) throw new Error(); setCategories(current => [...current, name]); })
+              .catch(() => setSaveError("Không thể lưu danh mục vào SQL Server."));
           }}
           onEdit={(oldName, newName) => {
             if (categories.includes(newName)) return;
             setCategories(categories.map(c => c === oldName ? newName : c));
           }}
           onDelete={name => {
-            setCategories(categories.filter(c => c !== name));
+            fetch("/seller-api/seller/product-categories/trash-by-name?sellerCode=SL-BT-0001", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) })
+              .then(r => { if (!r.ok) throw new Error(); setCategories(current => current.filter(c => c !== name)); })
+              .catch(() => setSaveError("Không thể chuyển danh mục vào thùng rác."));
           }}
         />
       )}
@@ -711,23 +768,19 @@ export default function SellerProductsPage() {
             const save = async () => {
               setSaveError("");
               try {
-                if (editingProduct) {
-                  setSaveError("Chức năng sửa sản phẩm chưa được lưu vào SQL Server.");
-                  return;
-                }
-                const response = await fetch("/seller-api/seller/products?sellerCode=SL-BT-0001", {
-                  method: "POST",
+                const response = await fetch(editingProduct ? `/seller-api/seller/products/${editingProduct.id}?sellerCode=SL-BT-0001` : "/seller-api/seller/products?sellerCode=SL-BT-0001", {
+                  method: editingProduct ? "PUT" : "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     name: product.name, price: product.price, category: product.category, type: product.type,
-                    description: product.description, status: product.available ? "active" : "out_of_stock",
+                    description: product.description, status: product.available ? "active" : "out_of_stock", toppingsJson: JSON.stringify(product.toppings || []),
                     image: product.image?.startsWith("blob:") ? null : product.image
                   })
                 });
-                const saved = await response.json();
-                if (!response.ok) throw new Error(saved.error || "Không thể lưu sản phẩm.");
-                const item = { ...saved, type: "single", image: saved.image || "https://placehold.co/96x96/f3f4f6/6b7280?text=Mon" };
-                setProducts(current => [item, ...current]);
+                const saved = response.status === 204 ? null : await response.json().catch(() => null);
+                if (!response.ok) throw new Error(saved?.error || "Không thể lưu sản phẩm.");
+                const item = { ...product, ...saved, id: editingProduct?.id || saved?.id, type: saved?.type || product.type || "single", image: saved?.image || product.image || "https://placehold.co/96x96/f3f4f6/6b7280?text=Mon" };
+                setProducts(current => editingProduct ? current.map(p => p.id === editingProduct.id ? item : p) : [item, ...current]);
                 setCategories(current => Array.from(new Set([...current, item.category])));
                 setModal(null);
                 setEditingProduct(null);

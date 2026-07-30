@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Promotion } from '../../data/mockSellerData';
-import { Plus, Edit2, Trash2, X, Tag, Copy, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Tag, Copy, Check, RotateCcw } from 'lucide-react';
 
 type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
 
 const emptyForm = {
   code: '', discount: '', discountType: 'percent' as const,
-  minOrder: '', maxDiscount: '', usageLimit: '',
+  usageLimit: '',
   startDate: '', endDate: '', description: '',
 };
 
@@ -22,7 +22,12 @@ export default function PromotionsPage() {
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const loadPromotions = () => fetch('/seller-api/seller/promotions?sellerCode=SL-BT-0001').then(r => r.json()).then(items => setPromos(items.map((p: any) => ({ id: String(p.id), code: p.code, discount: p.discount, discountType: p.discountType, minOrder: p.minOrder, maxDiscount: p.maxDiscount, usageLimit: p.usageLimit, usedCount: p.usedCount, startDate: p.startAt.slice(0,10), endDate: p.endAt.slice(0,10), description: p.description, status: new Date(p.endAt) < new Date() ? 'expired' : new Date(p.startAt) > new Date() ? 'upcoming' : 'active' }))));
+  const [trashPromos, setTrashPromos] = useState<Promotion[]>([]);
+  const [showTrash, setShowTrash] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const mapPromotion = (p: any): Promotion => ({ id: String(p.id), code: p.code, discount: p.discount, discountType: p.discountType, minOrder: 0, maxDiscount: 0, usageLimit: p.usageLimit, usedCount: p.usedCount, startDate: p.startAt.slice(0,10), endDate: p.endAt.slice(0,10), description: p.description, status: new Date(p.endAt) < new Date() ? 'expired' : new Date(p.startAt) > new Date() ? 'upcoming' : 'active' });
+  const loadPromotions = () => fetch('/seller-api/seller/promotions?sellerCode=SL-BT-0001').then(async r => { if(!r.ok) throw new Error('Không thể tải khuyến mãi từ SQL Server.'); return r.json(); }).then(items => setPromos(items.map(mapPromotion))).catch(e=>setSaveError(e.message));
+  const loadTrash = () => fetch('/seller-api/seller/promotions?trash=true&sellerCode=SL-BT-0001').then(async r => { if(!r.ok) throw new Error('Không thể tải thùng rác.'); return r.json(); }).then(items => setTrashPromos(items.map(mapPromotion))).catch(e=>setSaveError(e.message));
   useEffect(() => { loadPromotions(); }, []);
 
   const filtered = promos.filter(p => filter === 'all' || p.status === filter);
@@ -38,7 +43,6 @@ export default function PromotionsPage() {
   const openEdit = (p: Promotion) => {
     setForm({
       code: p.code, discount: String(p.discount), discountType: p.discountType,
-      minOrder: String(p.minOrder), maxDiscount: String(p.maxDiscount),
       usageLimit: String(p.usageLimit), startDate: p.startDate,
       endDate: p.endDate, description: p.description,
     });
@@ -46,32 +50,20 @@ export default function PromotionsPage() {
     setShowModal(true);
   };
 
-  const getStatus = (start: string, end: string): Promotion['status'] => {
-    const now = new Date();
-    if (new Date(start) > now) return 'upcoming';
-    if (new Date(end) < now) return 'expired';
-    return 'active';
-  };
-
   const handleSave = async () => {
-    if (!form.code.trim() || !form.discount) return;
-    const status = getStatus(form.startDate, form.endDate);
-    if (editId) {
-      setPromos(prev => prev.map(p => p.id === editId ? {
-        ...p, code: form.code.toUpperCase(), discount: Number(form.discount),
-        discountType: form.discountType, minOrder: Number(form.minOrder),
-        maxDiscount: Number(form.maxDiscount), usageLimit: Number(form.usageLimit),
-        startDate: form.startDate, endDate: form.endDate, description: form.description, status,
-      } : p));
-    } else {
-      await fetch('/seller-api/seller/promotions?sellerCode=SL-BT-0001', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: form.code, title: form.code, description: form.description, discountType: form.discountType, discount: Number(form.discount), minOrder: Number(form.minOrder), maxDiscount: Number(form.maxDiscount), usageLimit: Number(form.usageLimit), startAt: form.startDate, endAt: form.endDate }) });
-      loadPromotions();
-    }
+    setSaveError('');
+    if (!form.code.trim() || !form.discount || !form.usageLimit || !form.startDate || !form.endDate) { setSaveError('Vui lòng nhập đầy đủ mã, giá trị giảm, lượt sử dụng và thời gian.'); return; }
+    const response = await fetch(editId ? `/seller-api/seller/promotions/${editId}?sellerCode=SL-BT-0001` : '/seller-api/seller/promotions?sellerCode=SL-BT-0001', {
+      method: editId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: form.code, title: form.code, description: form.description, discountType: form.discountType, discount: Number(form.discount), minOrder: 0, maxDiscount: 0, usageLimit: Number(form.usageLimit), startAt: form.startDate, endAt: form.endDate })
+    });
+    if(!response.ok){const body=await response.json().catch(()=>null);setSaveError(body?.error||'Không thể lưu mã giảm giá.');return;}
+    await loadPromotions();
     setShowModal(false);
   };
 
   const handleDelete = async () => {
-    if (deleteId) { await fetch(`/seller-api/seller/promotions/${deleteId}/trash?sellerCode=SL-BT-0001`, { method: 'PUT' }); loadPromotions(); }
+    if (deleteId) { await fetch(`/seller-api/seller/promotions/${deleteId}/trash?sellerCode=SL-BT-0001`, { method: 'PUT' }); await loadPromotions(); }
     setDeleteId(null);
   };
 
@@ -95,7 +87,7 @@ export default function PromotionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Quản lý khuyến mãi</h1>
         <div className="flex items-center gap-2">
-        <button onClick={() => window.alert('Thùng rác: mã đã xóa được giữ 30 ngày để khôi phục.')}
+        <button onClick={async () => { await loadTrash(); setShowTrash(true); }}
           className="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors">
           <Trash2 size={18} /> Thùng rác
         </button>
@@ -153,14 +145,6 @@ export default function PromotionsPage() {
                   <span className="font-bold text-orange-600">
                     {p.discountType === 'percent' ? `${p.discount}%` : formatVND(p.discount)}
                   </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 block text-xs mb-0.5">Đơn tối thiểu:</span>
-                  <span className="font-medium">{formatVND(p.minOrder)}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500 block text-xs mb-0.5">Giảm tối đa:</span>
-                  <span className="font-medium">{formatVND(p.maxDiscount)}</span>
                 </div>
                 <div>
                   <span className="text-gray-500 block text-xs mb-0.5">Hạn sử dụng:</span>
@@ -226,19 +210,6 @@ export default function PromotionsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Đơn tối thiểu (đ)</label>
-                  <input type="number" value={form.minOrder} onChange={e => update('minOrder', e.target.value)} placeholder="VD: 150000"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Giảm tối đa (đ)</label>
-                  <input type="number" value={form.maxDiscount} onChange={e => update('maxDiscount', e.target.value)} placeholder="VD: 50000"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors" />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Giới hạn số lượt sử dụng</label>
                 <input type="number" value={form.usageLimit} onChange={e => update('usageLimit', e.target.value)} placeholder="VD: 500"
@@ -273,6 +244,39 @@ export default function PromotionsPage() {
                 {editId ? 'Lưu cập nhật' : 'Tạo mã mới'}
               </button>
             </div>
+            {saveError && <p className="mt-3 text-center text-sm text-red-600">{saveError}</p>}
+          </div>
+        </div>
+      )}
+
+      {showTrash && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-7 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Thùng rác mã giảm giá</h3>
+                <p className="mt-1 text-sm text-gray-500">Mã đã xóa được giữ 30 ngày trước khi tự động xóa vĩnh viễn.</p>
+              </div>
+              <button onClick={() => setShowTrash(false)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full"><X size={20}/></button>
+            </div>
+            {trashPromos.length === 0 ? (
+              <div className="py-14 text-center text-gray-400"><Trash2 className="mx-auto mb-3 opacity-30" size={42}/><p>Thùng rác đang trống</p></div>
+            ) : (
+              <div className="space-y-3">
+                {trashPromos.map(p => (
+                  <div key={p.id} className="flex items-center justify-between gap-4 border border-gray-200 rounded-2xl p-4">
+                    <div>
+                      <div className="font-mono font-bold text-orange-600">{p.code}</div>
+                      <div className="mt-1 text-sm text-gray-500">{p.discountType === 'percent' ? `${p.discount}%` : formatVND(p.discount)} · Hạn {p.endDate}</div>
+                    </div>
+                    <button
+                      onClick={async()=>{const response=await fetch(`/seller-api/seller/promotions/${p.id}/restore?sellerCode=SL-BT-0001`,{method:'PUT'});if(response.ok){await loadTrash();await loadPromotions();}}}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 text-sm font-medium"
+                    ><RotateCcw size={16}/>Khôi phục</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -285,7 +289,7 @@ export default function PromotionsPage() {
               <Trash2 size={32} className="text-red-500" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Xóa mã giảm giá?</h3>
-            <p className="text-base text-gray-500 mb-8">Bạn có chắc chắn muốn xóa mã này? Thao tác này không thể hoàn tác.</p>
+            <p className="text-base text-gray-500 mb-8">Mã sẽ được chuyển vào thùng rác và có thể khôi phục trong vòng 30 ngày.</p>
             <div className="flex gap-4">
               <button onClick={() => setDeleteId(null)}
                 className="flex-1 py-3 border border-gray-200 text-gray-700 font-medium rounded-xl text-base hover:bg-gray-50 transition-colors">Không</button>

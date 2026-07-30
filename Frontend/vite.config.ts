@@ -38,7 +38,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/seller-api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5092',
         changeOrigin: true,
       },
     },

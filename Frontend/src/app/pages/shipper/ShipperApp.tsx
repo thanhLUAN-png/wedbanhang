@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
@@ -13,11 +13,18 @@ import { ReportPage } from "./components/ReportPage";
 import { WalletPage } from "./components/WalletPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { RatingsPage } from "./components/RatingsPage";
-import { mockOrders, mockHistory, mockChats } from "./components/mockData";
+import { mockChats } from "./components/mockData";
 import { Order, OrderStatus, Chat, Message } from "./components/types";
 
 // Mock shipper user - dùng chung với hệ thống, không cần đăng nhập riêng
-const MOCK_SHIPPER = { name: "Trần Văn Shipper", phone: "0909123456", isShipper: true };
+const getShipperUser = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem("user") || "{}");
+    return { name: saved.name || "Shipper", phone: saved.phone || "0933000001", isShipper: true };
+  } catch {
+    return { name: "Shipper", phone: "0933000001", isShipper: true };
+  }
+};
 
 type Tab = "orders" | "history" | "chat" | "report" | "wallet" | "ratings" | "profile";
 
@@ -33,17 +40,10 @@ const navItems: { key: Tab; label: string; icon: React.ReactNode }[] = [
 
 export default function ShipperApp() {
   const navigate = useNavigate();
-  const currentUser = MOCK_SHIPPER;
+  const currentUser = getShipperUser();
   const [activeTab, setActiveTab]         = useState<Tab>("orders");
-  // Mỗi tài khoản shipper chỉ thấy đúng đơn được hệ thống tự động phân công.
-  // Những đơn còn lại thuộc shipper khác và không xuất hiện trong danh sách này.
-  const [orders, setOrders]               = useState<Order[]>(() => {
-    const assignedOrder = mockOrders[0];
-    return assignedOrder
-      ? [{ ...assignedOrder, status: "pending" as OrderStatus }]
-      : [];
-  });
-  const [history, setHistory]             = useState<Order[]>(mockHistory);
+  const [orders, setOrders]               = useState<Order[]>([]);
+  const [history, setHistory]             = useState<Order[]>([]);
   const [chats, setChats]                 = useState<Chat[]>(mockChats);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeChatId, setActiveChatId]   = useState<string | undefined>(undefined);
@@ -54,8 +54,33 @@ export default function ShipperApp() {
     localStorage.setItem("shipperOnline", String(isOnline));
   }, [isOnline]);
 
-  // TEST AUTO - MỐT XÓA: chỉ tự cấp thêm đúng 1 đơn mẫu sau lần giao thành công đầu tiên.
-  const hasAddedTestOrder = useRef(false);
+  const mapSqlOrder = (order: any): Order => ({
+    id: order.id, code: order.code, senderName: order.senderName,
+    senderPhone: order.senderPhone, senderAddress: order.senderAddress,
+    shopName: order.senderName, receiverName: order.receiverName,
+    receiverPhone: order.receiverPhone, receiverAddress: order.receiverAddress,
+    items: order.items, weight: 0, cod: order.cod, shippingFee: order.shippingFee,
+    distance: "—",
+    status: order.status === "shipping" ? "delivering"
+      : order.status === "completed" ? "delivered"
+      : order.status === "cancelled" ? "cancelled"
+      : order.assignedToMe ? "accepted" : "pending",
+    createdAt: order.createdAt, note: order.note,
+  });
+
+  const loadOrders = useCallback(async () => {
+    const response = await fetch(`/seller-api/shipper/orders?phone=${encodeURIComponent(currentUser.phone)}`);
+    if (!response.ok) return;
+    const data = (await response.json()).map(mapSqlOrder) as Order[];
+    setOrders(data.filter(order => !["delivered", "cancelled"].includes(order.status)));
+    setHistory(data.filter(order => ["delivered", "cancelled"].includes(order.status)));
+  }, [currentUser.phone]);
+
+  useEffect(() => {
+    void loadOrders();
+    const timer = window.setInterval(() => void loadOrders(), 5000);
+    return () => window.clearInterval(timer);
+  }, [loadOrders]);
 
   const handleLogout = () => navigate("/");
 
@@ -108,25 +133,43 @@ export default function ShipperApp() {
     });
   };
 
-  const handleAcceptOrder = (orderId: string) => {
+  const handleAcceptOrder = async (orderId: string) => {
     const activeOrder = orders.find(o => ["accepted", "picked", "delivering"].includes(o.status));
     if (activeOrder && activeOrder.id !== orderId) {
       toast.error(`Bạn đang thực hiện đơn #${activeOrder.code}. Hãy hoàn thành đơn này trước.`);
       return;
     }
 
+    const response = await fetch(`/seller-api/shipper/orders/${encodeURIComponent(orderId)}/accept?phone=${encodeURIComponent(currentUser.phone)}`, { method: "PUT" });
+    if (!response.ok) {
+      toast.error("Đơn đã có shipper khác nhận hoặc bạn đang giao đơn khác.");
+      await loadOrders();
+      return;
+    }
+
     setOrders(prev => prev
       // Khi một shipper nhận đơn, các đơn chờ còn lại được phân cho shipper khác.
-      .filter(o => o.id === orderId || o.status !== "pending")
       .map(o => o.id === orderId ? { ...o, status: "accepted" as OrderStatus } : o)
     );
     setSelectedOrder(prev => prev?.id === orderId ? { ...prev, status: "accepted" } : prev);
     const acceptedOrder = orders.find(order => order.id === orderId);
     if (acceptedOrder) connectOrderChats(acceptedOrder);
-    toast.success("Đã nhận đơn. Các đơn còn lại đã được chuyển cho shipper khác.");
+    toast.success("Đã nhận đơn. Bạn có thể bắt đầu giao hàng khi đã lấy món.");
   };
 
-  const handleUpdateStatus = (orderId: string, status: OrderStatus, proof?: string, cancelReason?: string, customerRating?: number, shopRating?: number, customerRatingMessage?: string, shopRatingMessage?: string) => {
+  const handleUpdateStatus = async (orderId: string, status: OrderStatus, proof?: string, cancelReason?: string, customerRating?: number, shopRating?: number, customerRatingMessage?: string, shopRatingMessage?: string) => {
+    if (["delivering", "delivered", "cancelled"].includes(status)) {
+      const response = await fetch(`/seller-api/shipper/orders/${encodeURIComponent(orderId)}/status?phone=${encodeURIComponent(currentUser.phone)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) {
+        toast.error("Không thể cập nhật trạng thái đơn hàng.");
+        await loadOrders();
+        return;
+      }
+    }
     const ratingSubmittedAt = customerRating || shopRating ? new Date().toISOString() : undefined;
     setOrders(prev => prev.map(o =>
       o.id === orderId ? { ...o, status, proofPhoto: proof ?? o.proofPhoto, note: cancelReason ?? o.note, customerRating, shopRating, customerRatingMessage, shopRatingMessage, ratingSubmittedAt } : o
@@ -141,17 +184,6 @@ export default function ShipperApp() {
         setOrders(prev => prev.filter(o => o.id !== orderId));
         setSelectedOrder(null);
 
-        // TEST AUTO - MỐT XÓA: mô phỏng cấp đơn mới sau khi đơn hiện tại hoàn thành hoặc bị hủy.
-        if ((status === "delivered" || status === "cancelled") && !hasAddedTestOrder.current) {
-          hasAddedTestOrder.current = true;
-          window.setTimeout(() => {
-            const nextTestOrder = mockOrders[1];
-            if (!nextTestOrder) return;
-
-            setOrders([{ ...nextTestOrder, status: "pending" as OrderStatus }]);
-            toast.info("TEST: Hệ thống vừa phân cho bạn một đơn mới.");
-          }, 1500);
-        }
       }
     }
   };

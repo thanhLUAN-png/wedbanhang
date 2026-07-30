@@ -17,6 +17,8 @@ export interface ShopProduct {
   shopAvatar: string;
   shopRating: number;
   shopFollowers: number;
+  restaurantId?: number;
+  toppings?: { name: string; price: number }[];
   description: string;
   specifications: { label: string; value: string }[];
   tags: string[];

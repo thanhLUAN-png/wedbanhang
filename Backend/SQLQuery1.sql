@@ -712,6 +712,62 @@ BEGIN
 END;
 GO
 
+/* Seller portal additions: activity, product categories, recycle bins and promotions */
+IF COL_LENGTH(N'dbo.Restaurants', N'IsActive') IS NULL
+  ALTER TABLE dbo.Restaurants ADD IsActive BIT NOT NULL CONSTRAINT DF_Restaurants_IsActive DEFAULT 1;
+GO
+IF COL_LENGTH(N'dbo.Restaurants', N'AutoActivityByHours') IS NULL
+  ALTER TABLE dbo.Restaurants ADD AutoActivityByHours BIT NOT NULL CONSTRAINT DF_Restaurants_AutoActivityByHours DEFAULT 0;
+GO
+IF COL_LENGTH(N'dbo.Promotions', N'DeletedAt') IS NULL
+  ALTER TABLE dbo.Promotions ADD DeletedAt DATETIME2 NULL;
+GO
+
+/* Khuyến mãi seller:
+   - MinimumOrderAmount và MaximumDiscountAmount giữ giá trị 0 vì giao diện không còn sử dụng.
+   - Xóa mềm bằng IsDeleted/DeletedAt; dữ liệu trong thùng rác quá 30 ngày mới bị xóa vĩnh viễn. */
+CREATE OR ALTER PROCEDURE dbo.uspSellerCleanupPromotionTrash
+AS
+BEGIN
+  SET NOCOUNT ON;
+  DELETE FROM dbo.Promotions
+  WHERE IsDeleted = 1
+    AND DeletedAt < DATEADD(DAY, -30, SYSDATETIME());
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.uspValidateRestaurantPromotion
+  @PromotionCode NVARCHAR(50)
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT TOP 1 p.PromotionId,p.PromotionCode,p.DiscountType,p.DiscountValue,
+         r.RestaurantId,r.Name AS RestaurantName
+  FROM dbo.Promotions p
+  JOIN dbo.Restaurants r ON r.RestaurantId=p.RestaurantId
+  WHERE p.PromotionCode=UPPER(LTRIM(RTRIM(@PromotionCode)))
+    AND p.IsDeleted=0
+    AND p.StartAt<=SYSDATETIME()
+    AND p.EndAt>=SYSDATETIME()
+    AND p.UsageCount<p.UsageLimit
+    AND r.IsActive=1;
+END;
+GO
+IF OBJECT_ID(N'dbo.SellerProductCategories', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.SellerProductCategories
+  (
+    CategoryId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    SellerId INT NOT NULL,
+    Name NVARCHAR(100) NOT NULL,
+    DeletedAt DATETIME2 NULL,
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_SellerProductCategories_CreatedAt DEFAULT SYSDATETIME(),
+    CONSTRAINT UQ_SellerProductCategories UNIQUE (SellerId, Name),
+    CONSTRAINT FK_SellerProductCategories_Seller FOREIGN KEY (SellerId) REFERENCES dbo.Sellers(SellerId)
+  );
+END;
+GO
+
 IF COL_LENGTH(N'dbo.Restaurants', N'PrimaryRestaurantCategoryId') IS NULL
 BEGIN
   ALTER TABLE dbo.Restaurants ADD PrimaryRestaurantCategoryId INT NULL;
@@ -935,6 +991,20 @@ BEGIN
     CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderId) REFERENCES dbo.Orders(OrderId)
   );
 END;
+
+IF COL_LENGTH(N'dbo.OrderItems', N'ProductRef') IS NULL
+  ALTER TABLE dbo.OrderItems ADD ProductRef NVARCHAR(80) NULL;
+IF COL_LENGTH(N'dbo.OrderItems', N'ImageUrl') IS NULL
+  ALTER TABLE dbo.OrderItems ADD ImageUrl NVARCHAR(1000) NULL;
+IF COL_LENGTH(N'dbo.OrderItems', N'Variant') IS NULL
+  ALTER TABLE dbo.OrderItems ADD Variant NVARCHAR(1000) NULL;
+IF COL_LENGTH(N'dbo.Orders', N'ShippingFee') IS NULL
+  ALTER TABLE dbo.Orders ADD ShippingFee DECIMAL(18,0) NOT NULL CONSTRAINT DF_Orders_ShippingFee DEFAULT 0;
+IF COL_LENGTH(N'dbo.Orders', N'DiscountAmount') IS NULL
+  ALTER TABLE dbo.Orders ADD DiscountAmount DECIMAL(18,0) NOT NULL CONSTRAINT DF_Orders_DiscountAmount DEFAULT 0;
+IF COL_LENGTH(N'dbo.Orders', N'UpdatedAt') IS NULL
+  ALTER TABLE dbo.Orders ADD UpdatedAt DATETIME2 NULL;
+GO
 
 
 
@@ -2737,6 +2807,75 @@ BEGIN
       CommissionAmount = ROUND(GrossAmount * @CommissionRatePercent / 100, 0)
   WHERE TransactionCode = @TransactionCode;
   IF @@ROWCOUNT = 0 THROW 50022, N'Không tìm thấy giao dịch.', 1;
+END;
+GO
+
+/* Tài khoản khách hàng dùng để đăng nhập và kiểm thử đặt món.
+   Mật khẩu thử nghiệm: 123456 (chỉ lưu chuỗi băm trong SQL Server). */
+IF NOT EXISTS (SELECT 1 FROM dbo.Customers WHERE Phone = N'0909000001')
+  INSERT INTO dbo.Customers (FullName, Phone)
+  VALUES (N'Nguyễn Minh Khách', N'0909000001');
+GO
+
+IF EXISTS (SELECT 1 FROM dbo.UserAccounts WHERE Email = N'khachhang@shopviet.vn')
+BEGIN
+  UPDATE dbo.UserAccounts
+  SET AccountCode = N'KH-TEST-0001',
+      AccountRole = N'buyer',
+      FullName = N'Nguyễn Minh Khách',
+      Phone = N'0909000001',
+      AccountStatus = N'active',
+      StatusReason = N'0',
+      PasswordHash = N'$2b$10$cSdZ3zDGL.xgCDwT3L96XeHl9BnHt/N0fjx8/e9hMGrQKNjmtOc1i'
+  WHERE Email = N'khachhang@shopviet.vn';
+END
+ELSE
+BEGIN
+  INSERT INTO dbo.UserAccounts
+    (AccountCode, AccountRole, FullName, Email, Phone, AccountStatus, StatusReason, PasswordHash)
+  VALUES
+    (N'KH-TEST-0001', N'buyer', N'Nguyễn Minh Khách', N'khachhang@shopviet.vn',
+     N'0909000001', N'active', N'0',
+     N'$2b$10$cSdZ3zDGL.xgCDwT3L96XeHl9BnHt/N0fjx8/e9hMGrQKNjmtOc1i');
+END;
+GO
+
+/* Tài khoản shipper thật dùng chung cho đăng nhập giao diện và nhận đơn SQL.
+   Email: shipper@example.com - Mật khẩu thử nghiệm: 123456. */
+IF EXISTS (SELECT 1 FROM dbo.Shippers WHERE Email=N'shipper@example.com')
+BEGIN
+  UPDATE dbo.Shippers
+  SET ShipperCode=N'SP-TEST-0001',RegionCode=N'BT',FullName=N'Trần Văn Shipper',
+      Phone=N'0909123456',PermanentAddress=N'Bình Tân, TP. Hồ Chí Minh',
+      DeliveryVehicle=N'Xe máy',LicensePlate=N'59X1-12345'
+  WHERE Email=N'shipper@example.com';
+END
+ELSE
+BEGIN
+  INSERT INTO dbo.Shippers
+    (ShipperCode,RegionCode,FullName,Email,Phone,PermanentAddress,DeliveryVehicle,LicensePlate)
+  VALUES
+    (N'SP-TEST-0001',N'BT',N'Trần Văn Shipper',N'shipper@example.com',N'0909123456',
+     N'Bình Tân, TP. Hồ Chí Minh',N'Xe máy',N'59X1-12345');
+END;
+GO
+
+IF EXISTS (SELECT 1 FROM dbo.UserAccounts WHERE Email=N'shipper@example.com')
+BEGIN
+  UPDATE dbo.UserAccounts
+  SET AccountCode=N'SP-TEST-0001',AccountRole=N'shipper',FullName=N'Trần Văn Shipper',
+      Phone=N'0909123456',AccountStatus=N'active',StatusReason=N'0',
+      PasswordHash=N'$2b$10$cSdZ3zDGL.xgCDwT3L96XeHl9BnHt/N0fjx8/e9hMGrQKNjmtOc1i'
+  WHERE Email=N'shipper@example.com';
+END
+ELSE
+BEGIN
+  INSERT INTO dbo.UserAccounts
+    (AccountCode,AccountRole,FullName,Email,Phone,AccountStatus,StatusReason,PasswordHash)
+  VALUES
+    (N'SP-TEST-0001',N'shipper',N'Trần Văn Shipper',N'shipper@example.com',
+     N'0909123456',N'active',N'0',
+     N'$2b$10$cSdZ3zDGL.xgCDwT3L96XeHl9BnHt/N0fjx8/e9hMGrQKNjmtOc1i');
 END;
 GO
 

@@ -14,12 +14,11 @@ interface OrderDetailPageProps {
 
 const statusFlow: { status: OrderStatus; label: string }[] = [
   { status: "accepted",   label: "Đã nhận đơn" },
-  { status: "picked",     label: "Đã lấy món" },
   { status: "delivering", label: "Đang giao" },
   { status: "delivered",  label: "Giao thành công" },
 ];
 
-const statusOrder: OrderStatus[] = ["pending","accepted","picked","delivering","delivered","cancelled"];
+const statusOrder: OrderStatus[] = ["pending","accepted","delivering","delivered","cancelled"];
 
 export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: OrderDetailPageProps) {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -41,14 +40,13 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
   const shopPayout = order.cod - platformCommission;
 
   const nextActionLabel: Partial<Record<OrderStatus, string>> = {
-    accepted:   "Xác nhận đã lấy món",
-    picked:     "Bắt đầu giao hàng",
+    accepted:   "Bắt đầu giao hàng",
     delivering: "Xác nhận giao thành công",
   };
 
   const handleNextStatus = () => {
     const nextMap: Partial<Record<OrderStatus, OrderStatus>> = {
-      accepted: "picked", picked: "delivering", delivering: "delivered",
+      accepted: "delivering", delivering: "delivered",
     };
     const next = nextMap[order.status];
     if (next === "delivered") { setShowPhotoModal(true); }
