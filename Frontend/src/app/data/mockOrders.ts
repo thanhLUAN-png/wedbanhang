@@ -36,7 +36,7 @@ export interface Order {
 
 export const statusLabel: Record<OrderStatus, string> = {
   pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
+  confirmed: "Đang chuẩn bị",
   shipping: "Đang giao hàng",
   delivered: "Đã giao hàng",
   cancelled: "Đã hủy",

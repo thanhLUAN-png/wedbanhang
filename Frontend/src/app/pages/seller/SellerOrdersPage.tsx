@@ -227,9 +227,14 @@ function OrderCard({
                   </button>
                 </div>
               ) : order.status === "confirmed" ? (
-                <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
-                  <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
-                  <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
+                <div className="flex flex-col gap-2 mt-2 w-max">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg">
+                    <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
+                    <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
+                  </div>
+                  <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-xl text-sm font-medium cursor-not-allowed">
+                    Đang chuẩn bị
+                  </button>
                 </div>
               ) : order.status === "pending" ? (
                 <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
@@ -255,10 +260,6 @@ function OrderCard({
               {/* ARRIVED: Shipper đã tới – nút Giao hàng */}
               {order.status === "arrived" && (
                 <div className="flex flex-col gap-2 items-end">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 border border-amber-300 rounded-xl text-xs text-amber-800 font-semibold animate-pulse">
-                    <Bike className="w-4 h-4" />
-                    Shipper đã tới quán!
-                  </div>
                   <button
                     onClick={() => setDialog("handoff")}
                     className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-colors shadow-sm"

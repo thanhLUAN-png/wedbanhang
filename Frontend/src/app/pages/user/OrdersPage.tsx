@@ -54,7 +54,7 @@ export default function OrdersPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-          {[{ id: "all", label: "Tất cả" }, { id: "pending", label: "Chờ xác nhận" }, { id: "confirmed", label: "Đã xác nhận" }, { id: "shipping", label: "Đang giao" }, { id: "delivered", label: "Đã giao" }, { id: "cancelled", label: "Đã hủy" }].map((s) => (
+          {[{ id: "all", label: "Tất cả" }, { id: "pending", label: "Chờ xác nhận" }, { id: "confirmed", label: "Đang chuẩn bị" }, { id: "shipping", label: "Đang giao" }, { id: "delivered", label: "Đã giao" }, { id: "cancelled", label: "Đã hủy" }].map((s) => (
             <button 
               key={s.id} 
               onClick={() => setFilter(s.id)} 

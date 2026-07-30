@@ -15,9 +15,10 @@ function formatDateTime(iso: string) {
 
 const paymentLabels: Record<string, string> = { cod: "Thanh toán khi nhận hàng", bank: "Chuyển khoản ngân hàng", momo: "Ví MoMo", zalopay: "ZaloPay" };
 
-const statusSteps: { status: OrderStatus; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const statusSteps: { status: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { status: "pending",   label: "Chờ xác nhận", icon: Clock },
-  { status: "confirmed", label: "Đã xác nhận",  icon: Package },
+  { status: "confirmed", label: "Đã xác nhận",  icon: CheckCircle },
+  { status: "preparing", label: "Đang chuẩn bị",icon: Package },
   { status: "shipping",  label: "Đang giao",    icon: Truck },
   { status: "delivered", label: "Đã giao",      icon: CheckCircle },
 ];
@@ -49,7 +50,11 @@ export default function OrderDetailPage() {
   }
 
   const isCancelledOrReturned = order.status === "cancelled" || order.status === "returned";
-  const activeStepIdx = isCancelledOrReturned ? -1 : statusSteps.findIndex(s => s.status === order.status);
+  const activeStepIdx = isCancelledOrReturned ? -1 : 
+    order.status === "pending" ? 0 :
+    order.status === "confirmed" ? 2 :
+    order.status === "shipping" ? 3 :
+    order.status === "delivered" ? 4 : -1;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-5">
