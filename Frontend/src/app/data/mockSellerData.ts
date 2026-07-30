@@ -24,7 +24,7 @@ export function generateOrderCode(province: string, date: Date, sequence: number
   return `${provinceCode}${dd}${mm}${yy}${stt}`;
 }
 
-export type SellerOrderStatus = "pending" | "confirmed" | "shipping" | "completed" | "returned" | "cancelled";
+export type SellerOrderStatus = "pending" | "confirmed" | "arrived" | "shipping" | "completed" | "returned" | "cancelled";
 
 export interface SellerOrderItem {
   id: string;
@@ -54,6 +54,7 @@ export interface SellerOrder {
 export const sellerStatusLabel: Record<SellerOrderStatus, string> = {
   pending:   "Chờ xác nhận",
   confirmed: "Đang chuẩn bị",
+  arrived:   "Đang chuẩn bị",
   shipping:  "Đang giao",
   completed: "Hoàn thành",
   returned:  "Trả hàng",
@@ -63,7 +64,8 @@ export const sellerStatusLabel: Record<SellerOrderStatus, string> = {
 export const sellerStatusColor: Record<SellerOrderStatus, string> = {
   pending:   "bg-yellow-100 text-yellow-700",
   confirmed: "bg-blue-100 text-blue-700",
-  shipping:  "bg-orange-100 text-orange-700",
+  arrived:   "bg-blue-100 text-blue-700",
+  shipping:  "bg-indigo-100 text-indigo-700",
   completed: "bg-green-100 text-green-700",
   returned:  "bg-gray-100 text-gray-700",
   cancelled: "bg-red-100 text-red-700",

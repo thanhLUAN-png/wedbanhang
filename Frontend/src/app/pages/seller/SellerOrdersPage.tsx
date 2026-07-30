@@ -20,7 +20,6 @@ const TABS: { id: SellerOrderStatus | "all"; label: string }[] = [
   { id: "all",       label: "Tất cả" },
   { id: "pending",   label: "Nhận đơn" },
   { id: "confirmed", label: "Đang chuẩn bị" },
-  { id: "arrived",   label: "Shipper đã tới" },
   { id: "shipping",  label: "Đang giao" },
   { id: "completed", label: "Hoàn thành" },
   { id: "returned",  label: "Trả hàng/Hoàn tiền" },
@@ -34,7 +33,7 @@ const paymentLabel: Record<string, string> = {
 const cardBgColor: Record<SellerOrderStatus, string> = {
   pending:   "bg-orange-50/40 hover:bg-orange-50/80 border-orange-100",
   confirmed: "bg-blue-50/50 hover:bg-blue-50 border-blue-100",
-  arrived:   "bg-amber-50/70 hover:bg-amber-50 border-amber-200",
+  arrived:   "bg-blue-50/50 hover:bg-blue-50 border-blue-100",
   shipping:  "bg-sky-50/50 hover:bg-sky-50 border-sky-100",
   completed: "bg-green-50/50 hover:bg-green-50 border-green-100",
   cancelled: "bg-red-50/50 hover:bg-red-50 border-red-100",
@@ -396,15 +395,18 @@ export default function SellerOrdersPage() {
   };
 
   const filtered = orders.filter(o => {
-    const matchTab = activeTab === "all" || o.status === activeTab;
+    const matchTab = activeTab === "all" 
+      || o.status === activeTab 
+      || (activeTab === "confirmed" && o.status === "arrived");
     const matchSearch =
       o.orderCode.includes(search) ||
       o.customer.name.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
 
-  const countBy = (id: SellerOrderStatus | "all") => {
+  const countBy = (id: string) => {
     if (id === "all") return orders.length;
+    if (id === "confirmed") return orders.filter(o => o.status === "confirmed" || o.status === "arrived").length;
     return orders.filter(o => o.status === id).length;
   };
 
