@@ -90,7 +90,7 @@ function OrderCard({
   order: SellerOrder;
   onConfirm: (id: string) => void;
   onCancel: (id: string) => void;
-  onHandOff: (id: string) => void;
+  onHandOff: (id: string, currentStatus: string) => void;
 }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -226,14 +226,9 @@ function OrderCard({
                   </button>
                 </div>
               ) : order.status === "confirmed" ? (
-                <div className="flex flex-col gap-2 mt-2 w-max">
-                  <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg">
-                    <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
-                    <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
-                  </div>
-                  <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-xl text-sm font-medium cursor-not-allowed">
-                    Đang chuẩn bị
-                  </button>
+                <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
+                  <Bike className="w-4 h-4 text-blue-400 animate-pulse" />
+                  <span className="text-blue-600 font-medium">Đang chờ shipper đến lấy hàng...</span>
                 </div>
               ) : order.status === "pending" ? (
                 <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-lg mt-2 w-max">
@@ -256,7 +251,7 @@ function OrderCard({
 
               {/* ── Action buttons theo từng trạng thái ── */}
 
-              {/* ARRIVED: Shipper đã tới – nút Giao hàng */}
+              {/* ARRIVED: Shipper đã tới – nút Giao hàng (xanh) */}
               {order.status === "arrived" && (
                 <div className="flex flex-col gap-2 items-end">
                   <button
@@ -265,6 +260,27 @@ function OrderCard({
                   >
                     <CheckCircle className="w-4 h-4" /> Giao hàng cho Shipper
                   </button>
+                </div>
+              )}
+
+              {/* CONFIRMED + có shipper: nút Giao hàng xanh; chưa có shipper: nút xám */}
+              {order.status === "confirmed" && (
+                <div className="flex flex-col gap-2 items-end">
+                  {order.shipperName ? (
+                    <button
+                      onClick={() => setDialog("handoff")}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all shadow-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Giao hàng cho Shipper
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed"
+                    >
+                      <Bike className="w-4 h-4" /> Chờ Shipper
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -317,7 +333,7 @@ function OrderCard({
         message={`Shipper ${order.shipperName ?? ""} đang ở quán. Bạn xác nhận đã giao đủ đơn #${order.orderCode} cho shipper để bắt đầu giao đến khách hàng.`}
         confirmLabel="Xác nhận giao"
         confirmClass="bg-green-500 hover:bg-green-600"
-        onConfirm={() => { setDialog(null); onHandOff(order.id); }}
+        onConfirm={() => { setDialog(null); onHandOff(order.id, order.status); }}
         onCancel={() => setDialog(null)}
       />
 
@@ -390,8 +406,11 @@ export default function SellerOrdersPage() {
     void updateOrderStatus(id, "cancelled");
   };
 
-  const handleHandOff = (id: string) => {
-    void updateOrderStatus(id, "ready");  // arrived -> shipping
+  const handleHandOff = (id: string, currentStatus?: string) => {
+    // Nếu shipper đã tới quán (arrived) -> dùng "ready"
+    // Nếu shipper đã nhận nhưng chưa tới (confirmed) -> dùng "ready_confirmed"
+    const action = currentStatus === "confirmed" ? "ready_confirmed" : "ready";
+    void updateOrderStatus(id, action as any);
   };
 
   const filtered = orders.filter(o => {

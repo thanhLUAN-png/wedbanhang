@@ -143,13 +143,14 @@ public sealed class SellerRepository(IConfiguration configuration)
     {
         var expectedStatus = nextStatus switch
         {
-            "confirmed" => "pending",
-            "shipping"  => "confirmed",
-            "ready"     => "arrived",   // Seller bấm "Giao hàng" khi shipper đã tới (arrived -> handed_over)
-            "cancelled" => "pending",
+            "confirmed"       => "pending",
+            "shipping"        => "confirmed",
+            "ready"           => "arrived",          // Seller giao khi shipper đã tới quán
+            "ready_confirmed" => "confirmed",        // Seller giao khi shipper đã nhận nhưng chưa tới
+            "cancelled"       => "pending",
             _ => null
         };
-        var actualNextStatus = nextStatus == "ready" ? "handed_over" : nextStatus;
+        var actualNextStatus = nextStatus is "ready" or "ready_confirmed" ? "handed_over" : nextStatus;
         if (expectedStatus is null) return false;
 
         await using var cn = new SqlConnection(_cs);
