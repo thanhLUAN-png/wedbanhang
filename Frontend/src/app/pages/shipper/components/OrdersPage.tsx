@@ -13,6 +13,7 @@ interface OrdersPageProps {
 const statusConfig: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   pending:   { label: "Chờ nhận",     color: "text-yellow-700", bg: "bg-yellow-50 border border-yellow-200",  dot: "bg-yellow-400" },
   accepted:  { label: "Đã nhận",      color: "text-blue-700",   bg: "bg-blue-50 border border-blue-200",    dot: "bg-blue-400" },
+  arrived:   { label: "Đã đến quán",  color: "text-indigo-700", bg: "bg-indigo-50 border border-indigo-200",  dot: "bg-indigo-400" },
   picked:    { label: "Đã lấy món",  color: "text-purple-700", bg: "bg-purple-50 border border-purple-200", dot: "bg-purple-400" },
   delivering:{ label: "Đang giao",    color: "text-orange-700", bg: "bg-orange-50 border border-orange-200", dot: "bg-orange-400" },
   delivered: { label: "Đã giao",      color: "text-green-700",  bg: "bg-green-50 border border-green-200",  dot: "bg-green-400" },
@@ -112,9 +113,9 @@ export function OrdersPage({ orders, isOnline, onToggleOnline, onSelectOrder, on
                   <p className="text-sm text-gray-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{order.distance}</p>
                 </div>
                 <div className="col-span-1">
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${st.color} ${st.bg}`} style={{fontWeight:500}}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-                    {st.label}
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${(st || { color: "", bg: "" }).color} ${(st || { color: "", bg: "" }).bg}`} style={{fontWeight:500}}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${(st || { dot: "" }).dot}`} />
+                    {st?.label}
                   </span>
                 </div>
                 <div className="col-span-1 flex justify-end">

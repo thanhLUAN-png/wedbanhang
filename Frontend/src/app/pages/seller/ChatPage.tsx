@@ -1,126 +1,151 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
-import { 
-  mockCustomerConversations, mockChatMessages, 
-  mockShipperConversations, mockShipperMessages, 
-  ChatMessage 
-} from '../../data/mockSellerData';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useLocation } from 'react-router';
 import { Send, Search, MessageSquare, Users, Truck } from 'lucide-react';
 
-type Conversation = {
-  id: string;
-  name: string;
+interface Conversation {
+  conversationId: number;
+  participantName: string;
   lastMessage: string;
-  time: string;
-  unread: number;
-  isTemp?: boolean;
+  lastMessageAt: string;
+  participantType: string;
   orderCode?: string;
-};
+}
+
+interface ChatMessage {
+  id: number;
+  content: string;
+  fromMe: boolean;
+  sentAt: string;
+  senderType: string;
+}
+
+function formatTime(t: string) { 
+  return new Date(t).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); 
+}
 
 export default function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'shippers' ? 'shippers' : 'customers';
-  const [activeTab, setActiveTab] = useState<'customers' | 'shippers'>(initialTab);
+  const location = useLocation();
+  const initialTabFromState = location.state?.tab;
+  const initialTab = initialTabFromState || (searchParams.get('tab') === 'shippers' ? 'shippers' : 'customers');
+  const [activeTab, setActiveTab] = useState<'customers' | 'shippers'>(initialTab as 'customers' | 'shippers');
+  const [initialSelectDone, setInitialSelectDone] = useState(false);
 
-  // Cập nhật tab nếu URL thay đổi (VD: user click từ trang Orders)
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'shippers' || tab === 'customers') {
-      setActiveTab(tab);
-    }
-    
-    const newId = searchParams.get('newId');
-    const newName = searchParams.get('newName');
-    const newOrderCode = searchParams.get('orderCode');
-    
-    if (newId && newName) {
-      if (tab === 'customers') {
-        setCustomerConvos(prev => {
-          if (prev.find(c => c.id === newId)) return prev;
-          return [{ id: newId, name: newName, orderCode: newOrderCode || undefined, lastMessage: '', time: 'Mới', unread: 0, isTemp: true }, ...prev];
-        });
-        setSelectedCustomerId(newId);
-      } else if (tab === 'shippers') {
-        setShipperConvos(prev => {
-          if (prev.find(c => c.id === newId)) return prev;
-          return [{ id: newId, name: newName, orderCode: newOrderCode || undefined, lastMessage: '', time: 'Mới', unread: 0, isTemp: true }, ...prev];
-        });
-        setSelectedShipperId(newId);
-      }
-    }
+    if (tab === 'shippers' || tab === 'customers') setActiveTab(tab);
   }, [searchParams]);
 
   const handleTabChange = (tab: 'customers' | 'shippers') => {
-    // Cleanup any isTemp conversations that have no messages when clicking away
-    setCustomerConvos(prev => prev.filter(c => !(c.isTemp && (!customerMessages[c.id] || customerMessages[c.id].length === 0))));
-    setShipperConvos(prev => prev.filter(c => !(c.isTemp && (!shipperMessages[c.id] || shipperMessages[c.id].length === 0))));
-    
     setActiveTab(tab);
     setSearchParams({ tab });
   };
 
   // State for Customers
-  const [customerConvos, setCustomerConvos] = useState<Conversation[]>(mockCustomerConversations);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(customerConvos[0]?.id || null);
-  const [customerMessages, setCustomerMessages] = useState<Record<string, ChatMessage[]>>(mockChatMessages);
+  const [customerConvos, setCustomerConvos] = useState<Conversation[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerInput, setCustomerInput] = useState('');
 
   // State for Shippers
-  const [shipperConvos, setShipperConvos] = useState<Conversation[]>(mockShipperConversations);
-  const [selectedShipperId, setSelectedShipperId] = useState<string | null>(shipperConvos[0]?.id || null);
-  const [shipperMessages, setShipperMessages] = useState<Record<string, ChatMessage[]>>(mockShipperMessages);
+  const [shipperConvos, setShipperConvos] = useState<Conversation[]>([]);
+  const [selectedShipperId, setSelectedShipperId] = useState<number | null>(null);
   const [shipperSearch, setShipperSearch] = useState('');
   const [shipperInput, setShipperInput] = useState('');
 
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const load = (type: 'customer' | 'shipper') => fetch(`/seller-api/seller/chat/participants?type=${type}&sellerCode=SL-BT-0001`).then(r => r.json()).then(rows => rows.map((x: any) => ({ id: x.id, name: x.name, orderCode: x.orderCode, lastMessage: x.lastMessage, time: new Date(x.lastMessageAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }), unread: 0 })));
-    load('customer').then(setCustomerConvos).catch(() => setCustomerConvos([]));
-    load('shipper').then(setShipperConvos).catch(() => setShipperConvos([]));
+    let active = true;
+    const fetchConvs = async (type: 'customer' | 'shipper') => {
+      try {
+        const res = await fetch(`/seller-api/seller/chat/participants?type=${type}&sellerCode=SL-BT-0001`);
+        if (res.ok) {
+          const data = await res.json();
+          if (active) {
+            if (type === 'customer') setCustomerConvos(data);
+            else setShipperConvos(data);
+          }
+        }
+      } catch (e) {}
+    };
+    fetchConvs('customer');
+    fetchConvs('shipper');
+    const interval = setInterval(() => { fetchConvs('customer'); fetchConvs('shipper'); }, 3000);
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
   // Active Context
   const isCustomer = activeTab === 'customers';
   
   const convos = isCustomer ? customerConvos : shipperConvos;
-  const setConvos = isCustomer ? setCustomerConvos : setShipperConvos;
   
   const selectedId = isCustomer ? selectedCustomerId : selectedShipperId;
   const setSelectedId = isCustomer ? setSelectedCustomerId : setSelectedShipperId;
-  
-  const messages = isCustomer ? customerMessages : shipperMessages;
-  const setMessages = isCustomer ? setCustomerMessages : setShipperMessages;
-  
   const search = isCustomer ? customerSearch : shipperSearch;
   const setSearch = isCustomer ? setCustomerSearch : setShipperSearch;
-  
   const input = isCustomer ? customerInput : shipperInput;
   const setInput = isCustomer ? setCustomerInput : setShipperInput;
 
-  const filtered = convos.filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()));
-  const selected = convos.find(c => c.id === selectedId);
-  const currentMessages = selectedId ? (messages[selectedId] || []) : [];
+  useEffect(() => {
+    if (!initialSelectDone && location.state?.orderCode && location.state?.participantType) {
+      const matchConvos = location.state.participantType === 'customer' ? customerConvos : shipperConvos;
+      if (matchConvos.length > 0) {
+        const match = matchConvos.find(c => c.orderCode === location.state.orderCode);
+        if (match) {
+          if (location.state.participantType === 'customer') {
+            setSelectedCustomerId(match.conversationId);
+          } else {
+            setSelectedShipperId(match.conversationId);
+          }
+          setInitialSelectDone(true);
+        }
+      }
+    }
+  }, [customerConvos, shipperConvos, location.state, initialSelectDone]);
 
-  const handleSelect = (id: string) => {
-    // Cleanup any isTemp conversations that have no messages when clicking away
-    setCustomerConvos(prev => prev.filter(c => c.id === id || !(c.isTemp && (!customerMessages[c.id] || customerMessages[c.id].length === 0))));
-    setShipperConvos(prev => prev.filter(c => c.id === id || !(c.isTemp && (!shipperMessages[c.id] || shipperMessages[c.id].length === 0))));
+  const filtered = convos.filter(c => !search || c.participantName?.toLowerCase().includes(search.toLowerCase()) || c.orderCode?.toLowerCase().includes(search.toLowerCase()));
+  const selected = convos.find(c => c.conversationId === selectedId);
 
+  useEffect(() => {
+    if (!selected) return;
+    let active = true;
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/seller-api/seller/chat/${selected.conversationId}/messages?type=${selected.participantType}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (active) setMessages(data);
+        }
+      } catch (e) {}
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 2000);
+    return () => { active = false; clearInterval(interval); };
+  }, [selected]);
+
+  useEffect(() => {
+    const messagesEl = messagesRef.current;
+    if (!selected || !messagesEl) return;
+    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+  }, [selected?.conversationId, messages.length]);
+
+  const handleSelect = (id: number) => {
     setSelectedId(id);
-    (setConvos as any)(prev => prev.map((c: Conversation) => c.id === id ? { ...c, unread: 0 } : c));
   };
 
-  const handleSend = () => {
-    if (!input.trim() || !selectedId) return;
-    const msg: ChatMessage = {
-      id: `m${Date.now()}`,
-      sender: 'me',
-      content: input.trim(),
-      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    };
-    (setMessages as any)(prev => ({ ...prev, [selectedId]: [...(prev[selectedId] || []), msg] }));
-    (setConvos as any)(prev => prev.map((c: Conversation) => c.id === selectedId ? { ...c, lastMessage: input.trim(), time: 'Vừa xong', isTemp: false } : c));
+  const handleSend = async () => {
+    if (!input.trim() || !selected) return;
+    const text = input.trim();
     setInput('');
+    try {
+      await fetch(`/seller-api/seller/chat/${selected.conversationId}/messages?type=${selected.participantType}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text })
+      });
+    } catch (e) {}
   };
 
   const badgeColor = isCustomer ? 'bg-orange-500' : 'bg-sky-500';
@@ -182,32 +207,27 @@ export default function ChatPage() {
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {filtered.map(c => (
-              <button key={c.id} onClick={() => handleSelect(c.id)}
+              <button key={c.conversationId} onClick={() => handleSelect(c.conversationId)}
                 className={`w-full text-left p-3 rounded-xl flex items-start gap-3 transition-colors ${
-                  selectedId === c.id ? `${selectedBgColor} border` : 'hover:bg-white border border-transparent'
+                  selectedId === c.conversationId ? `${selectedBgColor} border` : 'hover:bg-white border border-transparent'
                 }`}>
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0 ${badgeColor} shadow-sm ${badgeShadow}`}>
-                  {c.name.charAt(0)}
+                  {(c.participantName || "?").charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-bold text-gray-900 truncate">{c.name}</span>
+                      <span className="text-sm font-bold text-gray-900 truncate">{c.participantName}</span>
                       {c.orderCode && (
                         <span className="text-xs font-mono font-bold text-gray-500 tracking-wider mt-0.5">#{c.orderCode}</span>
                       )}
                     </div>
-                    <span className="text-xs text-gray-400 ml-2 shrink-0 self-start mt-0.5">{c.time}</span>
+                    <span className="text-xs text-gray-400 ml-2 shrink-0 self-start mt-0.5">{formatTime(c.lastMessageAt)}</span>
                   </div>
-                  <div className={`text-sm truncate mt-0.5 ${c.unread > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                  <div className="text-sm truncate mt-0.5 text-gray-500">
                     {c.lastMessage}
                   </div>
                 </div>
-                {c.unread > 0 && (
-                  <span className={`w-5 h-5 rounded-full text-white text-xs font-medium flex items-center justify-center shrink-0 ${badgeColor} mt-3 shadow-sm ${badgeShadow}`}>
-                    {c.unread}
-                  </span>
-                )}
               </button>
             ))}
             {filtered.length === 0 && (
@@ -223,12 +243,12 @@ export default function ChatPage() {
           {selected ? (
             <>
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4 bg-white">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold ${badgeColor} shadow-sm ${badgeShadow}`}>
-                  {selected.name.charAt(0)}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${badgeColor} text-white`}>
+                  {(selected.participantName || "?").charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="text-base font-bold text-gray-900">{selected.name}</div>
+                    <div className="text-base font-bold text-gray-900">{selected.participantName}</div>
                     {selected.orderCode && (
                       <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-800 text-sm font-mono font-bold tracking-wider">
                         #{selected.orderCode}
@@ -241,14 +261,14 @@ export default function ChatPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
-                {currentMessages.map(msg => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+              <div ref={messagesRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
+                {messages.map(msg => (
+                  <div key={msg.id} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-                      msg.sender === 'me' ? `${msgBgMe} rounded-br-sm` : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
+                      msg.fromMe ? `${msgBgMe} rounded-br-sm` : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
                     }`}>
                       <p className="leading-relaxed">{msg.content}</p>
-                      <p className={`text-xs mt-1 text-right ${msg.sender === 'me' ? textMe : 'text-gray-400'}`}>{msg.time}</p>
+                      <p className={`text-xs mt-1 text-right ${msg.fromMe ? textMe : 'text-gray-400'}`}>{formatTime(msg.sentAt)}</p>
                     </div>
                   </div>
                 ))}

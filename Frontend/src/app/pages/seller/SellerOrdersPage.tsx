@@ -81,6 +81,36 @@ function ConfirmDialog({
   );
 }
 
+function CancelDialog({
+  open, title, message, onConfirm, onCancel, reason, setReason
+}: {
+  open: boolean; title: string; message: string; onConfirm: () => void; onCancel: () => void; reason: string; setReason: (r: string) => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+        <button onClick={onCancel} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-600 mb-4">{message}</p>
+        <textarea
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          placeholder="Nhập lý do từ chối (bắt buộc)..."
+          className="w-full min-h-[100px] p-3 rounded-xl border border-gray-200 text-sm mb-6 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+        />
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Đóng</button>
+          <button disabled={!reason.trim()} onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Từ chối</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OrderCard({
   order,
   onConfirm,
@@ -89,7 +119,7 @@ function OrderCard({
 }: {
   order: SellerOrder;
   onConfirm: (id: string) => void;
-  onCancel: (id: string) => void;
+  onCancel: (id: string, reason: string) => void;
   onHandOff: (id: string, currentStatus: string) => void;
 }) {
   const navigate = useNavigate();
@@ -97,6 +127,7 @@ function OrderCard({
   const isCollapsible = order.status === "shipping" || order.status === "completed" || order.status === "cancelled";
   const [isCardExpanded, setIsCardExpanded] = useState(!isCollapsible);
   const [dialog, setDialog] = useState<null | "confirm" | "cancel" | "handoff">(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   const displayedItems = isExpanded ? order.items : order.items.slice(0, 3);
   const hiddenCount = order.items.length - 3;
@@ -188,7 +219,7 @@ function OrderCard({
                 <span className="text-gray-400">·</span>
                 <span className="text-gray-500">{order.customer.phone}</span>
                 <button
-                  onClick={() => navigate(`/seller/chat?tab=customers&newId=c_${order.customer.phone}&newName=${encodeURIComponent(order.customer.name)}&orderCode=${order.orderCode}`)}
+                  onClick={() => navigate("/seller/chat", { state: { tab: "customers", orderCode: order.orderCode, participantType: "customer" } })}
                   className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full transition-colors ml-1"
                 >
                   <MessageCircle className="w-3.5 h-3.5" /> Chat
@@ -212,7 +243,7 @@ function OrderCard({
                   <Bike className="w-4 h-4 text-green-500 shrink-0" />
                   <span className="text-green-700 font-medium">Shipper: {order.shipperName}</span>
                   <button
-                    onClick={() => navigate(`/seller/chat?tab=shippers&newId=s_${encodeURIComponent(order.shipperName!)}&newName=${encodeURIComponent(order.shipperName!)}&orderCode=${order.orderCode}`)}
+                    onClick={() => navigate("/seller/chat", { state: { tab: "shippers", orderCode: order.orderCode, participantType: "shipper" } })}
                     className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full transition-colors ml-1"
                   >
                     <MessageCircle className="w-3.5 h-3.5" /> Chat
@@ -327,14 +358,14 @@ function OrderCard({
       />
 
       {/* Dialog từ chối đơn */}
-      <ConfirmDialog
+      <CancelDialog
         open={dialog === "cancel"}
         title="Từ chối đơn hàng?"
         message={`Bạn sẽ từ chối đơn #${order.orderCode}. Khách hàng sẽ được hoàn tiền (nếu đã thanh toán trước).`}
-        confirmLabel="Từ chối"
-        confirmClass="bg-red-500 hover:bg-red-600"
-        onConfirm={() => { setDialog(null); onCancel(order.id); }}
-        onCancel={() => setDialog(null)}
+        reason={cancelReason}
+        setReason={setCancelReason}
+        onConfirm={() => { setDialog(null); onCancel(order.id, cancelReason); setCancelReason(""); }}
+        onCancel={() => { setDialog(null); setCancelReason(""); }}
       />
     </>
   );
@@ -371,11 +402,11 @@ export default function SellerOrdersPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const updateOrderStatus = async (id: string, status: "confirmed" | "shipping" | "cancelled" | "ready") => {
+  const updateOrderStatus = async (id: string, status: "confirmed" | "shipping" | "cancelled" | "ready", cancelReason?: string) => {
     const response = await fetch(`/seller-api/seller/orders/${encodeURIComponent(id)}/status?sellerCode=SL-BT-0001`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, cancelReason }),
     });
     if (!response.ok) {
       setError("Trạng thái đơn đã thay đổi. Vui lòng tải lại danh sách.");
@@ -391,8 +422,8 @@ export default function SellerOrdersPage() {
     void updateOrderStatus(id, "confirmed");
   };
 
-  const handleCancel = (id: string) => {
-    void updateOrderStatus(id, "cancelled");
+  const handleCancel = (id: string, reason: string) => {
+    void updateOrderStatus(id, "cancelled", reason);
   };
 
   const handleHandOff = (id: string, currentStatus?: string) => {

@@ -13,8 +13,8 @@ import { ReportPage } from "./components/ReportPage";
 import { WalletPage } from "./components/WalletPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { RatingsPage } from "./components/RatingsPage";
-import { mockChats } from "./components/mockData";
-import { Order, OrderStatus, Chat, Message } from "./components/types";
+import { mockChats as _mockChats } from "./components/mockData";
+import { Order, OrderStatus } from "./components/types";
 
 // Mock shipper user - dùng chung với hệ thống, không cần đăng nhập riêng
 const getShipperUser = () => {
@@ -44,15 +44,39 @@ export default function ShipperApp() {
   const [activeTab, setActiveTab]         = useState<Tab>("orders");
   const [orders, setOrders]               = useState<Order[]>([]);
   const [history, setHistory]             = useState<Order[]>([]);
-  const [chats, setChats]                 = useState<Chat[]>(mockChats);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [activeChatId, setActiveChatId]   = useState<string | undefined>(undefined);
+  const [activeChatTab, setActiveChatTab] = useState<"customer" | "seller">("customer");
+  const [activeChatOrderCode, setActiveChatOrderCode] = useState<string | undefined>(undefined);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const shipperPhone = currentUser.phone;
+
+  // Initialize from backend (or fallback to local storage)
   const [isOnline, setIsOnline] = useState(() => localStorage.getItem("shipperOnline") !== "false");
+
+  useEffect(() => {
+    fetch(`/seller-api/shipper/online-status?phone=${shipperPhone}`)
+      .then(res => res.json())
+      .then(data => setIsOnline(data.isOnline))
+      .catch(() => {});
+  }, [shipperPhone]);
 
   useEffect(() => {
     localStorage.setItem("shipperOnline", String(isOnline));
   }, [isOnline]);
+
+  const toggleOnline = () => {
+    const nextStatus = !isOnline;
+    setIsOnline(nextStatus);
+    fetch(`/seller-api/shipper/online-status?phone=${shipperPhone}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isOnline: nextStatus })
+    }).catch(() => {
+      // Revert if failed
+      setIsOnline(!nextStatus);
+      toast.error("Không thể thay đổi trạng thái");
+    });
+  };
 
   const mapSqlOrder = (order: any): Order => ({
     id: order.id, code: order.code, senderName: order.senderName,
@@ -165,7 +189,7 @@ export default function ShipperApp() {
       const response = await fetch(`/seller-api/shipper/orders/${encodeURIComponent(orderId)}/status?phone=${encodeURIComponent(currentUser.phone)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: apiStatus }),
+        body: JSON.stringify({ status: apiStatus, cancelReason }),
       });
       if (!response.ok) {
         toast.error("Không thể cập nhật trạng thái. Có thể quán chưa bấm giao hàng, vui lòng đợi quán xác nhận giao.");
@@ -201,50 +225,16 @@ export default function ShipperApp() {
   };
 
   const handleOpenChat = (orderId: string, type: "customer" | "seller") => {
-    const existing = chats.find(c => c.orderId === orderId && c.type === type);
-    if (existing) {
-      setActiveChatId(existing.id);
-    } else {
-      const order = orders.find(o => o.id === orderId);
-      if (!order) return;
-      const newChat: Chat = {
-        id: `c-${Date.now()}`,
-        orderId,
-        orderCode: order.code,
-        with: type === "customer" ? order.receiverName : order.senderName,
-        type,
-        avatar: (type === "customer" ? order.receiverName : order.senderName).substring(0, 2).toUpperCase(),
-        lastMessage: "",
-        lastTime: "Vừa xong",
-        unread: 0,
-        messages: [],
-      };
-      setChats(prev => [newChat, ...prev]);
-      setActiveChatId(newChat.id);
-    }
+    setActiveChatTab(type);
+    const order = orders.find(o => o.id === orderId) || history.find(o => o.id === orderId);
+    setActiveChatOrderCode(order?.code);
     setActiveTab("chat");
-    setSelectedOrder(null);
-  };
-
-  const handleSendMessage = (chatId: string, text: string) => {
-    const newMsg: Message = {
-      id: `m-${Date.now()}`,
-      from: "shipper",
-      text,
-      time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setChats(prev => prev.map(c =>
-      c.id === chatId
-        ? { ...c, messages: [...c.messages, newMsg], lastMessage: text, lastTime: newMsg.time, unread: 0 }
-        : c
-    ));
   };
 
   const handleRegisterShipper = (data: { vehicle: string; licensePlate: string; idCard: string }) => {
     // mock: đã là shipper rồi
   };
 
-  const totalUnread = chats.reduce((s, c) => s + c.unread, 0);
   const pendingOrders = orders.filter(o => o.status === "pending").length;
 
   return (
@@ -263,7 +253,7 @@ export default function ShipperApp() {
         <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
           {navItems.map(item => {
             const isActive = activeTab === item.key && !selectedOrder;
-            const badge = item.key === "chat" ? totalUnread : item.key === "orders" ? pendingOrders : 0;
+            const badge = item.key === "orders" ? pendingOrders : 0;
             return (
               <button
                 key={item.key}
@@ -353,7 +343,7 @@ export default function ShipperApp() {
             )}
             <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
               <Bell className="w-5 h-5" />
-              {totalUnread > 0 && (
+              {false && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
@@ -381,7 +371,7 @@ export default function ShipperApp() {
             <OrdersPage
               orders={orders}
               isOnline={isOnline}
-              onToggleOnline={() => setIsOnline(value => !value)}
+              onToggleOnline={toggleOnline}
               onSelectOrder={setSelectedOrder}
               onAcceptOrder={handleAcceptOrder}
             />
@@ -392,10 +382,8 @@ export default function ShipperApp() {
             />
           ) : activeTab === "chat" ? (
             <ChatPage
-              chats={chats}
-              activeChatId={activeChatId}
-              onBack={() => setActiveChatId(undefined)}
-              onSendMessage={handleSendMessage}
+              initialActiveType={activeChatTab}
+              initialOrderCode={activeChatOrderCode}
             />
           ) : activeTab === "wallet" ? (
             <WalletPage orders={orders} />

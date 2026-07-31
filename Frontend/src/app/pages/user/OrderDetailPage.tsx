@@ -1,8 +1,33 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { ChevronRight, Package, Truck, CheckCircle, XCircle, Clock, MapPin, CreditCard, ArrowLeft } from "lucide-react";
+import { ChevronRight, Package, Truck, CheckCircle, XCircle, Clock, MapPin, CreditCard, ArrowLeft, X, Store, User, Phone, MessageSquare } from "lucide-react";
 import { statusLabel, statusColor, type Order, type OrderStatus } from "../../data/mockOrders";
 import { toast } from "sonner";
+import { useCart } from "../../context/CartContext";
+import type { ShopProduct } from "../../data/mockShopProducts";
+
+function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void; }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+        <button onClick={onCancel} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-bold text-gray-900 mb-6">Bạn có muốn hủy đơn hàng này không?</h3>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            Đóng
+          </button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm">
+            Hủy đơn
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function formatVND(v: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
@@ -26,8 +51,47 @@ const statusSteps: { status: string; label: string; icon: React.ComponentType<{ 
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem, clearCart } = useCart();
   const [order,setOrder]=useState<Order|undefined>();
   const [loading,setLoading]=useState(true);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+
+  const reorderItems = async (o: Order) => {
+    try {
+      const res = await fetch("/seller-api/public/catalog");
+      const data = res.ok ? await res.json() : null;
+      const productsById = new Map<string, any>(data?.products?.map((p: any) => [`sql-product-${p.id}`, p]) ?? []);
+      clearCart();
+      for (const item of o.items) {
+        const fresh: any = productsById.get(item.productId);
+        const product: ShopProduct = {
+          id: item.productId, name: item.productName, slug: item.productId,
+          price: item.price, image: item.productImage || "", images: [item.productImage || ""],
+          rating: 0, reviewCount: 0, sold: 0, stock: 99, category: "", categoryId: "",
+          shopId: fresh ? `sql-shop-${fresh.shopId}` : "",
+          shopName: fresh?.shopName ?? item.shopName ?? "",
+          shopAvatar: fresh?.shopLogoUrl ?? "", shopRating: Number(fresh?.shopRating ?? 0), shopFollowers: 0,
+          restaurantId: fresh ? Number(fresh.shopId) : undefined,
+          description: "", specifications: [], tags: [],
+        };
+        addItem(product, item.quantity, item.variant ?? undefined);
+      }
+      toast.success("Đã thêm sản phẩm vào giỏ hàng!");
+      navigate("/cart");
+    } catch { toast.error("Không thể thêm vào giỏ hàng."); }
+  };
+
+  const handleCancel = async () => {
+    let phone="";try{phone=JSON.parse(localStorage.getItem("user")||"{}").phone||""}catch{}
+    const response=await fetch(`/seller-api/customer/orders/${encodeURIComponent(order!.id)}/cancel?phone=${encodeURIComponent(phone)}`,{method:"PUT"});
+    if(response.ok){
+      toast.success("Đã hủy đơn hàng");
+      navigate("/orders");
+    }else{
+      toast.error("Không thể hủy đơn hàng.");
+      setCancelModalOpen(false);
+    }
+  };
   useEffect(()=>{
     let phone="";
     try{phone=JSON.parse(localStorage.getItem("user")||"{}").phone||""}catch{}
@@ -42,7 +106,7 @@ export default function OrderDetailPage() {
           rawStatus==="handed_over" ? "confirmed" :
           rawStatus
         ) as OrderStatus;
-        setOrder({id:found.id,status:mappedStatus,items:found.items.map((item:any)=>({...item,id:String(item.id)})),subtotal:found.subtotal,shippingFee:found.shippingFee,discount:found.discount,total:found.total,address:{name:found.customerName,phone:found.phone,street:found.deliveryAddress,district:"",city:""},paymentMethod:found.paymentMethod,note:found.note,createdAt:found.createdAt,updatedAt:found.updatedAt});
+        setOrder({id:found.id,status:mappedStatus,items:found.items.map((item:any)=>({...item,id:String(item.id)})),subtotal:found.subtotal,shippingFee:found.shippingFee,discount:found.discount,total:found.total,address:{name:found.customerName,phone:found.phone,street:found.deliveryAddress,district:"",city:""},paymentMethod:found.paymentMethod,note:found.note,createdAt:found.createdAt,updatedAt:found.updatedAt,cancelReason:found.cancelReason,shopName:found.shopName,shopPhone:found.shopPhone,shipperName:found.shipperName,shipperPhone:found.shipperPhone});
       }
     }).finally(()=>setLoading(false));
   },[id]);
@@ -117,8 +181,57 @@ export default function OrderDetailPage() {
             <XCircle className={`h-6 w-6 ${order.status === "cancelled" ? "text-red-500" : "text-gray-500"}`} />
             <div>
               <div className="font-medium text-gray-800">{statusLabel[order.status]}</div>
-              {order.note && <div className="text-sm text-gray-500 mt-0.5">Lý do: {order.note}</div>}
+              {order.status === "cancelled" && order.cancelReason && <div className="text-sm text-red-600 mt-0.5">Lý do hủy: {order.cancelReason}</div>}
+              {order.note && order.status !== "cancelled" && <div className="text-sm text-gray-500 mt-0.5">Lý do: {order.note}</div>}
             </div>
+          </div>
+        )}
+
+        {/* Contact Cards */}
+        {!isCancelledOrReturned && order.status !== "pending" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Shop Contact */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="flex items-center gap-2 text-orange-600 mb-3">
+                <Store className="w-5 h-5" />
+                <span className="font-medium">Người gửi (Quán)</span>
+              </div>
+              <div className="font-semibold text-gray-800 text-lg mb-1">{order.shopName || "Cửa hàng"}</div>
+              <div className="text-gray-500 text-sm mb-5">{order.shopPhone}</div>
+              <div className="flex gap-3 mt-auto">
+                <a href={`tel:${order.shopPhone}`} className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                  <Phone className="w-4 h-4" /> Gọi
+                </a>
+                <button onClick={() => navigate("/chat", { state: { orderCode: order.id, participantType: "seller" } })} className="flex-1 flex items-center justify-center gap-2 py-2 border border-orange-200 text-orange-600 rounded-xl font-medium hover:bg-orange-50 transition-colors">
+                  <MessageSquare className="w-4 h-4" /> Nhắn tin
+                </button>
+              </div>
+            </div>
+
+            {/* Shipper Contact */}
+            {order.shipperName ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <div className="flex items-center gap-2 text-blue-600 mb-3">
+                  <User className="w-5 h-5" />
+                  <span className="font-medium">Tài xế (Shipper)</span>
+                </div>
+                <div className="font-semibold text-gray-800 text-lg mb-1">{order.shipperName}</div>
+                <div className="text-gray-500 text-sm mb-5">{order.shipperPhone}</div>
+                <div className="flex gap-3 mt-auto">
+                  <a href={`tel:${order.shipperPhone}`} className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <Phone className="w-4 h-4" /> Gọi
+                  </a>
+                  <button onClick={() => navigate("/chat", { state: { orderCode: order.id, participantType: "shipper" } })} className="flex-1 flex items-center justify-center gap-2 py-2 border border-blue-200 text-blue-600 rounded-xl font-medium hover:bg-blue-50 transition-colors">
+                    <MessageSquare className="w-4 h-4" /> Nhắn tin
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col items-center justify-center text-gray-400 min-h-[160px]">
+                <User className="w-8 h-8 mb-3 opacity-30" />
+                <p className="font-medium">Đang tìm tài xế...</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -182,21 +295,27 @@ export default function OrderDetailPage() {
         {/* Actions */}
         {order.status === "pending" && (
           <button
-            onClick={async () => {let phone="";try{phone=JSON.parse(localStorage.getItem("user")||"{}").phone||""}catch{}const response=await fetch(`/seller-api/customer/orders/${encodeURIComponent(order.id)}/cancel?phone=${encodeURIComponent(phone)}`,{method:"PUT"});if(response.ok){toast.success("Đã hủy đơn hàng");navigate("/orders")}else toast.error("Không thể hủy đơn hàng.");}}
+            onClick={() => setCancelModalOpen(true)}
             className="w-full py-3 border-2 border-red-300 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
           >
             Hủy đơn hàng
           </button>
         )}
-        {order.status === "delivered" && (
+        {(order.status === "delivered" || order.status === "cancelled") && (
           <button
-            onClick={() => toast.success("Cảm ơn bạn đã xác nhận!")}
+            onClick={() => void reorderItems(order)}
             className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors"
           >
-            Đã nhận hàng
+            Mua lại
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={cancelModalOpen}
+        onConfirm={handleCancel}
+        onCancel={() => setCancelModalOpen(false)}
+      />
     </div>
   );
 }

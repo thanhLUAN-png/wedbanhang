@@ -19,6 +19,11 @@ export interface Order {
   shippingFee: number;
   discount: number;
   total: number;
+  cancelReason?: string;
+  shopName?: string;
+  shopPhone?: string;
+  shipperName?: string;
+  shipperPhone?: string;
   address: {
     name: string;
     phone: string;

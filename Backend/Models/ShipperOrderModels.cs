@@ -16,5 +16,6 @@ public sealed class ShipperOrderViewModel
     public string Status { get; init; } = "pending";
     public DateTime CreatedAt { get; init; }
     public string Note { get; init; } = "";
+    public string? CancelReason { get; init; }
     public bool AssignedToMe { get; init; }
 }

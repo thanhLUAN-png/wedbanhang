@@ -50,13 +50,16 @@ export function OrderDetailPage({ order, onBack, onUpdateStatus, onChat }: Order
   // Determine next action label + icon
   const nextActionConfig: Partial<Record<OrderStatus, { label: string; icon: React.ReactNode; color: string }>> = {
     accepted:   { label: "Đã tới quán",         icon: <Navigation className="w-4 h-4" />,   color: "bg-blue-500 hover:bg-blue-600" },
-    picked:     { label: "Nhận hàng & Bắt đầu giao", icon: <ShoppingBag className="w-4 h-4" />, color: "bg-purple-500 hover:bg-purple-600" },
+    arrived:    { label: "Đã lấy món",          icon: <ShoppingBag className="w-4 h-4" />,  color: "bg-indigo-500 hover:bg-indigo-600" },
+    picked:     { label: "Bắt đầu đi giao",     icon: <ShoppingBag className="w-4 h-4" />,  color: "bg-purple-500 hover:bg-purple-600" },
     delivering: { label: "Xác nhận giao thành công", icon: <CheckCircle className="w-4 h-4" />, color: "bg-green-500 hover:bg-green-600" },
   };
 
   const handleNextStatus = () => {
     if (order.status === "accepted") {
       onUpdateStatus(order.id, "arrived");
+    } else if (order.status === "arrived") {
+      onUpdateStatus(order.id, "picked");
     } else if (order.status === "picked") {
       // Yêu cầu chụp ảnh nhận hàng tại quán
       setShowPickupPhotoModal(true);

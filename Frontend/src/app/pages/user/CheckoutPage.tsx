@@ -128,20 +128,7 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Shipping */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Truck className="h-4 w-4 text-orange-500" />
-              <h3 className="font-semibold text-gray-800">Phương thức vận chuyển</h3>
-            </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-gray-800">Giao hàng tiêu chuẩn</div>
-                <div className="text-xs text-gray-500 mt-0.5">Nhận hàng trong 3-5 ngày làm việc</div>
-              </div>
-              <div className="text-sm font-semibold text-green-600">{shippingFee === 0 ? "Miễn phí" : formatVND(shippingFee)}</div>
-            </div>
-          </div>
+
 
           {/* Payment */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">

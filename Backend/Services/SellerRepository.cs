@@ -104,7 +104,7 @@ public sealed class SellerRepository(IConfiguration configuration)
         const string sql = """
             SELECT o.OrderId,o.OrderCode,o.Status,o.PaymentMethod,o.DeliveryAddress,o.CustomerNote,o.TotalAmount,o.OrderedAt,
                    c.FullName,c.Phone,sh.FullName,
-                   i.OrderItemId,i.ProductNameSnapshot,i.UnitPrice,i.Quantity
+                   i.OrderItemId,i.ProductNameSnapshot,i.UnitPrice,i.Quantity,COALESCE(o.CancelReason,N'')
             FROM dbo.Orders o
             JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
             JOIN dbo.Sellers s ON s.SellerId=r.SellerId
@@ -131,7 +131,7 @@ public sealed class SellerRepository(IConfiguration configuration)
                 {
                     Id = id.ToString(), OrderCode = reader.GetString(1), Status = reader.GetString(2) == "handed_over" ? "shipping" : reader.GetString(2), PaymentMethod = reader.GetString(3),
                     DeliveryAddress = reader.GetString(4), Note = reader.GetString(5) == "0" ? "" : reader.GetString(5), Total = reader.GetDecimal(6), OrderedAt = reader.GetDateTime(7),
-                    CustomerName = reader.GetString(8), CustomerPhone = reader.GetString(9), ShipperName = reader.IsDBNull(10) ? null : reader.GetString(10)
+                    CustomerName = reader.GetString(8), CustomerPhone = reader.GetString(9), ShipperName = reader.IsDBNull(10) ? null : reader.GetString(10), CancelReason = reader.GetString(15)
                 });
             }
             if (!reader.IsDBNull(11)) result[index].Items.Add(new SellerOrderLineItem { Id = reader.GetInt32(11).ToString(), ProductName = reader.GetString(12), Price = reader.GetDecimal(13), Quantity = reader.GetInt32(14) });
@@ -140,7 +140,7 @@ public sealed class SellerRepository(IConfiguration configuration)
         return result;
     }
 
-    public async Task<bool> UpdateSellerOrderStatusAsync(string sellerCode, int orderId, string nextStatus)
+    public async Task<bool> UpdateSellerOrderStatusAsync(string sellerCode, int orderId, string nextStatus, string? cancelReason = null)
     {
         var expectedStatus = nextStatus switch
         {
@@ -159,7 +159,8 @@ public sealed class SellerRepository(IConfiguration configuration)
         const string sql = """
             UPDATE o
             SET o.Status=@nextStatus,o.UpdatedAt=SYSDATETIME(),
-                o.CancelledBy = CASE WHEN @nextStatus = 'cancelled' THEN 'seller' ELSE o.CancelledBy END
+                o.CancelledBy = CASE WHEN @nextStatus = 'cancelled' THEN 'seller' ELSE o.CancelledBy END,
+                o.CancelReason = CASE WHEN @nextStatus = 'cancelled' THEN @cancelReason ELSE o.CancelReason END
             FROM dbo.Orders o
             JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
             JOIN dbo.Sellers s ON s.SellerId=r.SellerId
@@ -172,7 +173,32 @@ public sealed class SellerRepository(IConfiguration configuration)
         cmd.Parameters.AddWithValue("@expectedStatus", expectedStatus);
         cmd.Parameters.AddWithValue("@orderId", orderId);
         cmd.Parameters.AddWithValue("@sellerCode", sellerCode);
-        return await cmd.ExecuteNonQueryAsync() == 1;
+        cmd.Parameters.AddWithValue("@cancelReason", cancelReason ?? (object)DBNull.Value);
+        var result = await cmd.ExecuteNonQueryAsync() == 1;
+
+        if (actualNextStatus == "confirmed" && result)
+        {
+            const string chatSql = """
+                DECLARE @sId INT, @cust INT;
+                SELECT @sId=r.SellerId, @cust=o.CustomerId
+                FROM dbo.Orders o JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+                WHERE o.OrderId=@orderId;
+                
+                IF NOT EXISTS(SELECT 1 FROM dbo.Conversations WHERE OrderId=@orderId)
+                BEGIN
+                    INSERT INTO dbo.Conversations(SellerId, CustomerId, OrderId, ParticipantType, ConversationStatus, CreatedAt, LastMessageAt)
+                    VALUES(@sId, @cust, @orderId, 'customer', 'active', SYSDATETIME(), SYSDATETIME());
+                    DECLARE @cId INT = SCOPE_IDENTITY();
+                    INSERT INTO dbo.Messages(ConversationId, SenderType, Content, MessageType, IsRead, SentAt)
+                    VALUES(@cId, 'seller', N'Cảm ơn quý khách đã đặt hàng của cửa hàng chúng tôi! Đơn hàng đang được chuẩn bị.', 'text', 0, SYSDATETIME());
+                END
+                """;
+            await using var chatCmd = new SqlCommand(chatSql, cn);
+            chatCmd.Parameters.AddWithValue("@orderId", orderId);
+            await chatCmd.ExecuteNonQueryAsync();
+        }
+
+        return result;
     }
 
     public async Task<List<ShipperOrderViewModel>> GetShipperOrdersAsync(string phone)
@@ -181,16 +207,17 @@ public sealed class SellerRepository(IConfiguration configuration)
         await cn.OpenAsync();
         const string sql = """
             DECLARE @shipperId INT=(SELECT TOP 1 ShipperId FROM dbo.Shippers WHERE Phone=@phone);
+            DECLARE @isOnline BIT=(SELECT TOP 1 IsOnline FROM dbo.Shippers WHERE Phone=@phone);
             SELECT o.OrderId,o.OrderCode,r.Name,COALESCE(r.Phone,N''),COALESCE(r.Address,N''),
                    c.FullName,c.Phone,o.DeliveryAddress,
                    COALESCE((SELECT STRING_AGG(CONCAT(i.ProductNameSnapshot,N' x',i.Quantity),N', ') FROM dbo.OrderItems i WHERE i.OrderId=o.OrderId),N''),
                    o.TotalAmount,COALESCE(o.ShippingFee,0),o.Status,o.OrderedAt,
                    CASE WHEN o.CustomerNote=N'0' THEN N'' ELSE o.CustomerNote END,
-                   CONVERT(bit,CASE WHEN o.ShipperId=@shipperId THEN 1 ELSE 0 END)
+                   CONVERT(bit,CASE WHEN o.ShipperId=@shipperId THEN 1 ELSE 0 END), COALESCE(o.CancelReason,N'')
             FROM dbo.Orders o
             JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
             JOIN dbo.Customers c ON c.CustomerId=o.CustomerId
-            WHERE (o.Status=N'confirmed' AND o.ShipperId IS NULL)
+            WHERE (o.Status=N'confirmed' AND o.ShipperId IS NULL AND @isOnline=1)
                OR (o.ShipperId=@shipperId AND o.Status IN (N'confirmed',N'arrived',N'handed_over',N'shipping',N'completed',N'cancelled'))
             ORDER BY o.OrderedAt DESC,o.OrderId DESC;
             """;
@@ -205,9 +232,28 @@ public sealed class SellerRepository(IConfiguration configuration)
                 SenderPhone=reader.GetString(3),SenderAddress=reader.GetString(4),ReceiverName=reader.GetString(5),
                 ReceiverPhone=reader.GetString(6),ReceiverAddress=reader.GetString(7),Items=reader.GetString(8),
                 Cod=reader.GetDecimal(9),ShippingFee=reader.GetDecimal(10),Status=reader.GetString(11),
-                CreatedAt=reader.GetDateTime(12),Note=reader.GetString(13),AssignedToMe=reader.GetBoolean(14)
+                CreatedAt=reader.GetDateTime(12),Note=reader.GetString(13),AssignedToMe=reader.GetBoolean(14),CancelReason=reader.GetString(15)
             });
         return result;
+    }
+
+    public async Task SetShipperOnlineAsync(string phone, bool isOnline)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        await using var cmd = new SqlCommand("UPDATE dbo.Shippers SET IsOnline=@v WHERE Phone=@phone", cn);
+        cmd.Parameters.AddWithValue("@phone", phone);
+        cmd.Parameters.AddWithValue("@v", isOnline);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> GetShipperOnlineAsync(string phone)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        await using var cmd = new SqlCommand("SELECT TOP 1 COALESCE(IsOnline,1) FROM dbo.Shippers WHERE Phone=@phone", cn);
+        cmd.Parameters.AddWithValue("@phone", phone);
+        return Convert.ToBoolean(await cmd.ExecuteScalarAsync() ?? true);
     }
 
     public async Task<bool> AcceptShipperOrderAsync(int orderId, string phone)
@@ -227,10 +273,45 @@ public sealed class SellerRepository(IConfiguration configuration)
         await using var cmd = new SqlCommand(sql, cn);
         cmd.Parameters.AddWithValue("@orderId", orderId);
         cmd.Parameters.AddWithValue("@phone", phone);
-        return await cmd.ExecuteNonQueryAsync() == 1;
+        var result = await cmd.ExecuteNonQueryAsync() == 1;
+
+        if (result)
+        {
+            const string chatSql = """
+                DECLARE @shipperId INT, @sId INT, @cust INT;
+                SELECT @shipperId = ShipperId FROM dbo.Shippers WHERE Phone=@phone;
+                SELECT @sId=r.SellerId, @cust=o.CustomerId
+                FROM dbo.Orders o JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+                WHERE o.OrderId=@orderId;
+                
+                IF NOT EXISTS(SELECT 1 FROM dbo.ShipperConversations WHERE OrderId=@orderId AND ParticipantType='customer')
+                BEGIN
+                    INSERT INTO dbo.ShipperConversations(ShipperId, CustomerId, OrderId, ParticipantType, ConversationStatus, CreatedAt, LastMessageAt)
+                    VALUES(@shipperId, @cust, @orderId, 'customer', 'active', SYSDATETIME(), SYSDATETIME());
+                    DECLARE @scId1 BIGINT = SCOPE_IDENTITY();
+                    INSERT INTO dbo.ShipperMessages(ShipperConversationId, SenderType, Content, MessageType, IsRead, SentAt)
+                    VALUES(@scId1, 'shipper', N'Tôi là tài xế đang nhận đơn của bạn. Vui lòng đợi ít phút nhé!', 'text', 0, SYSDATETIME());
+                END
+
+                IF NOT EXISTS(SELECT 1 FROM dbo.ShipperConversations WHERE OrderId=@orderId AND ParticipantType='seller')
+                BEGIN
+                    INSERT INTO dbo.ShipperConversations(ShipperId, SellerId, OrderId, ParticipantType, ConversationStatus, CreatedAt, LastMessageAt)
+                    VALUES(@shipperId, @sId, @orderId, 'seller', 'active', SYSDATETIME(), SYSDATETIME());
+                    DECLARE @scId2 BIGINT = SCOPE_IDENTITY();
+                    INSERT INTO dbo.ShipperMessages(ShipperConversationId, SenderType, Content, MessageType, IsRead, SentAt)
+                    VALUES(@scId2, 'shipper', N'Chào quán, tôi là tài xế đang đến nhận đơn.', 'text', 0, SYSDATETIME());
+                END
+                """;
+            await using var chatCmd = new SqlCommand(chatSql, cn);
+            chatCmd.Parameters.AddWithValue("@orderId", orderId);
+            chatCmd.Parameters.AddWithValue("@phone", phone);
+            await chatCmd.ExecuteNonQueryAsync();
+        }
+
+        return result;
     }
 
-    public async Task<bool> UpdateShipperOrderStatusAsync(int orderId, string phone, string nextStatus)
+    public async Task<bool> UpdateShipperOrderStatusAsync(int orderId, string phone, string nextStatus, string? cancelReason = null)
     {
         // Map frontend status -> DB status / expected DB status
         // arrived: shipper tới quán (confirmed -> arrived)
@@ -254,7 +335,7 @@ public sealed class SellerRepository(IConfiguration configuration)
         if (nextStatus == "cancelled")
         {
             const string cancelSql = """
-                UPDATE o SET Status='cancelled', CancelledBy='shipper', UpdatedAt=SYSDATETIME()
+                UPDATE o SET Status='cancelled', CancelledBy='shipper', CancelReason=@cancelReason, UpdatedAt=SYSDATETIME()
                 FROM dbo.Orders o JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId
                 WHERE o.OrderId=@orderId AND sh.Phone=@phone
                   AND o.Status IN ('confirmed','arrived','handed_over','shipping');
@@ -262,6 +343,7 @@ public sealed class SellerRepository(IConfiguration configuration)
             await using var cancelCmd = new SqlCommand(cancelSql, cn);
             cancelCmd.Parameters.AddWithValue("@orderId", orderId);
             cancelCmd.Parameters.AddWithValue("@phone", phone);
+            cancelCmd.Parameters.AddWithValue("@cancelReason", cancelReason ?? (object)DBNull.Value);
             return await cancelCmd.ExecuteNonQueryAsync() == 1;
         }
 
@@ -441,7 +523,193 @@ public sealed class SellerRepository(IConfiguration configuration)
         await using var rd=await cmd.ExecuteReaderAsync(); if(!await rd.ReadAsync()) return null;
         return new PublicPromotionItem{Id=rd.GetInt32(0),Code=rd.GetString(1),DiscountType=rd.GetString(2)=="amount"?"fixed":rd.GetString(2),Discount=rd.GetDecimal(3),RestaurantId=rd.GetInt32(4),RestaurantName=rd.GetString(5)};
     }
-    public async Task<List<SellerChatParticipant>> GetChatParticipantsAsync(string sellerCode,string type){await using var cn=new SqlConnection(_cs);await cn.OpenAsync();var sql=type=="shipper"?"SELECT DISTINCT CONCAT(N's-',sh.ShipperId),sh.FullName,o.OrderCode,COALESCE((SELECT TOP 1 m.Content FROM dbo.ShipperConversations c JOIN dbo.ShipperMessages m ON m.ShipperConversationId=c.ShipperConversationId WHERE c.OrderId=o.OrderId ORDER BY m.SentAt DESC),N''),COALESCE((SELECT TOP 1 m.SentAt FROM dbo.ShipperConversations c JOIN dbo.ShipperMessages m ON m.ShipperConversationId=c.ShipperConversationId WHERE c.OrderId=o.OrderId ORDER BY m.SentAt DESC),o.OrderedAt) FROM dbo.Orders o JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId JOIN dbo.Sellers s ON s.SellerId=r.SellerId JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId WHERE s.SellerCode=@code AND o.ShipperId IS NOT NULL":"SELECT DISTINCT CONCAT(N'c-',cu.CustomerId),cu.FullName,o.OrderCode,COALESCE((SELECT TOP 1 m.Content FROM dbo.Conversations c JOIN dbo.Messages m ON m.ConversationId=c.ConversationId WHERE c.OrderId=o.OrderId ORDER BY m.SentAt DESC),N''),COALESCE((SELECT TOP 1 m.SentAt FROM dbo.Conversations c JOIN dbo.Messages m ON m.ConversationId=c.ConversationId WHERE c.OrderId=o.OrderId ORDER BY m.SentAt DESC),o.OrderedAt) FROM dbo.Orders o JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId JOIN dbo.Sellers s ON s.SellerId=r.SellerId JOIN dbo.Customers cu ON cu.CustomerId=o.CustomerId WHERE s.SellerCode=@code";await using var cmd=new SqlCommand(sql,cn);cmd.Parameters.AddWithValue("@code",sellerCode);await using var rd=await cmd.ExecuteReaderAsync();var list=new List<SellerChatParticipant>();while(await rd.ReadAsync())list.Add(new SellerChatParticipant{Id=rd.GetString(0),Name=rd.GetString(1),Type=type,OrderCode=rd.GetString(2),LastMessage=rd.GetString(3),LastMessageAt=rd.GetDateTime(4)});return list;}
+    public async Task<List<ChatParticipantViewModel>> GetSellerChatParticipantsAsync(string sellerCode, string type)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        var sql = type == "shipper" ? """
+            SELECT c.ShipperConversationId, sh.FullName, o.OrderCode,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.ShipperConversations c
+            JOIN dbo.Shippers sh ON sh.ShipperId=c.ShipperId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+            JOIN dbo.Sellers s ON s.SellerId=r.SellerId
+            WHERE s.SellerCode=@code AND c.ParticipantType='seller'
+            ORDER BY 5 DESC
+            """ : """
+            SELECT c.ConversationId, cu.FullName, o.OrderCode,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.Conversations c
+            JOIN dbo.Customers cu ON cu.CustomerId=c.CustomerId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+            JOIN dbo.Sellers s ON s.SellerId=r.SellerId
+            WHERE s.SellerCode=@code
+            ORDER BY 5 DESC
+            """;
+        await using var cmd = new SqlCommand(sql, cn);
+        cmd.Parameters.AddWithValue("@code", sellerCode);
+        await using var rd = await cmd.ExecuteReaderAsync();
+        var list = new List<ChatParticipantViewModel>();
+        while (await rd.ReadAsync())
+        {
+            list.Add(new ChatParticipantViewModel {
+                ConversationId = Convert.ToInt64(rd.GetValue(0)),
+                ParticipantName = rd.GetString(1),
+                OrderCode = rd.GetString(2),
+                ParticipantType = type,
+                LastMessage = rd.GetString(3),
+                LastMessageAt = rd.GetDateTime(4)
+            });
+        }
+        return list;
+    }
+
+    public async Task<List<ChatParticipantViewModel>> GetCustomerChatParticipantsAsync(string phone)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        const string sql = """
+            SELECT c.ConversationId, r.Name, o.OrderCode, 'seller' AS Type,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.Messages m WHERE m.ConversationId=c.ConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.Conversations c
+            JOIN dbo.Customers cu ON cu.CustomerId=c.CustomerId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+            WHERE cu.Phone=@phone
+            UNION ALL
+            SELECT c.ShipperConversationId, sh.FullName, o.OrderCode, 'shipper' AS Type,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.ShipperConversations c
+            JOIN dbo.Customers cu ON cu.CustomerId=c.CustomerId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Shippers sh ON sh.ShipperId=c.ShipperId
+            WHERE cu.Phone=@phone AND c.ParticipantType='customer'
+            ORDER BY 6 DESC
+            """;
+        await using var cmd = new SqlCommand(sql, cn);
+        cmd.Parameters.AddWithValue("@phone", phone);
+        await using var rd = await cmd.ExecuteReaderAsync();
+        var list = new List<ChatParticipantViewModel>();
+        while (await rd.ReadAsync())
+        {
+            list.Add(new ChatParticipantViewModel {
+                ConversationId = Convert.ToInt64(rd.GetValue(0)),
+                ParticipantName = rd.GetString(1),
+                OrderCode = rd.GetString(2),
+                ParticipantType = rd.GetString(3),
+                LastMessage = rd.GetString(4),
+                LastMessageAt = rd.GetDateTime(5)
+            });
+        }
+        return list;
+    }
+
+    public async Task<List<ChatParticipantViewModel>> GetShipperChatParticipantsAsync(string phone)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        const string sql = """
+            SELECT c.ShipperConversationId, cu.FullName, o.OrderCode, 'customer' AS Type,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.ShipperConversations c
+            JOIN dbo.Shippers sh ON sh.ShipperId=c.ShipperId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Customers cu ON cu.CustomerId=c.CustomerId
+            WHERE sh.Phone=@phone AND c.ParticipantType='customer'
+            UNION ALL
+            SELECT c.ShipperConversationId, r.Name, o.OrderCode, 'seller' AS Type,
+                   COALESCE((SELECT TOP 1 m.Content FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),N''),
+                   COALESCE((SELECT TOP 1 m.SentAt FROM dbo.ShipperMessages m WHERE m.ShipperConversationId=c.ShipperConversationId ORDER BY m.SentAt DESC),c.CreatedAt)
+            FROM dbo.ShipperConversations c
+            JOIN dbo.Shippers sh ON sh.ShipperId=c.ShipperId
+            JOIN dbo.Orders o ON o.OrderId=c.OrderId
+            JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId
+            WHERE sh.Phone=@phone AND c.ParticipantType='seller'
+            ORDER BY 6 DESC
+            """;
+        await using var cmd = new SqlCommand(sql, cn);
+        cmd.Parameters.AddWithValue("@phone", phone);
+        await using var rd = await cmd.ExecuteReaderAsync();
+        var list = new List<ChatParticipantViewModel>();
+        while (await rd.ReadAsync())
+        {
+            list.Add(new ChatParticipantViewModel {
+                ConversationId = Convert.ToInt64(rd.GetValue(0)),
+                ParticipantName = rd.GetString(1),
+                OrderCode = rd.GetString(2),
+                ParticipantType = rd.GetString(3),
+                LastMessage = rd.GetString(4),
+                LastMessageAt = rd.GetDateTime(5)
+            });
+        }
+        return list;
+    }
+
+    public async Task<List<ChatMessageViewModel>> GetMessagesAsync(long conversationId, string role, string participantType)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        
+        bool isShipperConv = (role == "shipper") || (participantType == "shipper") || (role == "seller" && participantType == "shipper") || (role == "customer" && participantType == "shipper");
+        
+        string sql;
+        if (isShipperConv)
+        {
+            sql = "SELECT ShipperMessageId, Content, SenderType, SentAt FROM dbo.ShipperMessages WHERE ShipperConversationId=@id ORDER BY SentAt ASC";
+        }
+        else
+        {
+            sql = "SELECT MessageId, Content, SenderType, SentAt FROM dbo.Messages WHERE ConversationId=@id ORDER BY SentAt ASC";
+        }
+        
+        await using var cmd = new SqlCommand(sql, cn);
+        cmd.Parameters.AddWithValue("@id", conversationId);
+        await using var rd = await cmd.ExecuteReaderAsync();
+        var list = new List<ChatMessageViewModel>();
+        while (await rd.ReadAsync())
+        {
+            var senderType = rd.GetString(2);
+            list.Add(new ChatMessageViewModel {
+                Id = Convert.ToInt64(rd.GetValue(0)),
+                Content = rd.GetString(1),
+                SenderType = senderType,
+                FromMe = senderType == role,
+                SentAt = rd.GetDateTime(3)
+            });
+        }
+        return list;
+    }
+
+    public async Task SendMessageAsync(long conversationId, string role, string participantType, string content)
+    {
+        await using var cn = new SqlConnection(_cs);
+        await cn.OpenAsync();
+        
+        bool isShipperConv = (role == "shipper") || (participantType == "shipper") || (role == "seller" && participantType == "shipper") || (role == "customer" && participantType == "shipper");
+        
+        string sql;
+        if (isShipperConv)
+        {
+            sql = "INSERT INTO dbo.ShipperMessages(ShipperConversationId, SenderType, Content, MessageType, IsRead, SentAt) VALUES(@id, @role, @content, 'text', 0, SYSDATETIME()); UPDATE dbo.ShipperConversations SET LastMessageAt=SYSDATETIME() WHERE ShipperConversationId=@id;";
+        }
+        else
+        {
+            sql = "INSERT INTO dbo.Messages(ConversationId, SenderType, Content, MessageType, IsRead, SentAt) VALUES(@id, @role, @content, 'text', 0, SYSDATETIME()); UPDATE dbo.Conversations SET LastMessageAt=SYSDATETIME() WHERE ConversationId=@id;";
+        }
+        
+        await using var cmd = new SqlCommand(sql, cn);
+        cmd.Parameters.AddWithValue("@id", conversationId);
+        cmd.Parameters.AddWithValue("@role", role);
+        cmd.Parameters.AddWithValue("@content", content);
+        await cmd.ExecuteNonQueryAsync();
+    }
     public async Task<bool> GetAutoActivityAsync(string sellerCode){await using var cn=new SqlConnection(_cs);await cn.OpenAsync();await using var cmd=new SqlCommand("SELECT TOP 1 AutoActivityByHours FROM dbo.Restaurants r JOIN dbo.Sellers s ON s.SellerId=r.SellerId WHERE s.SellerCode=@code",cn);cmd.Parameters.AddWithValue("@code",sellerCode);return Convert.ToBoolean(await cmd.ExecuteScalarAsync()??false);}
     public async Task SetAutoActivityAsync(string sellerCode,bool value){await using var cn=new SqlConnection(_cs);await cn.OpenAsync();await using var cmd=new SqlCommand("UPDATE r SET AutoActivityByHours=@value FROM dbo.Restaurants r JOIN dbo.Sellers s ON s.SellerId=r.SellerId WHERE s.SellerCode=@code",cn);cmd.Parameters.AddWithValue("@code",sellerCode);cmd.Parameters.AddWithValue("@value",value);await cmd.ExecuteNonQueryAsync();}
     public async Task<List<SellerCategoryItem>> GetCategoriesAsync(string seller){await using var cn=new SqlConnection(_cs);await cn.OpenAsync();const string sql="SELECT c.CategoryId,c.Name FROM dbo.SellerProductCategories c JOIN dbo.Sellers s ON s.SellerId=c.SellerId WHERE s.SellerCode=@seller AND c.DeletedAt IS NULL ORDER BY c.Name";await using var cmd=new SqlCommand(sql,cn);cmd.Parameters.AddWithValue("@seller",seller);await using var rd=await cmd.ExecuteReaderAsync();var r=new List<SellerCategoryItem>();while(await rd.ReadAsync())r.Add(new SellerCategoryItem{Id=rd.GetInt32(0),Name=rd.GetString(1)});return r;}
@@ -488,13 +756,13 @@ public sealed class SellerRepository(IConfiguration configuration)
     public async Task<List<CustomerOrderViewModel>> GetCustomerOrdersAsync(string phone)
     {
         await using var cn=new SqlConnection(_cs); await cn.OpenAsync();
-        const string sql="SELECT o.OrderId,o.OrderCode,o.Status,o.PaymentMethod,o.DeliveryAddress,COALESCE(o.CustomerNote,N''),o.TotalAmount,COALESCE(o.ShippingFee,0),COALESCE(o.DiscountAmount,0),o.OrderedAt,COALESCE(o.UpdatedAt,o.OrderedAt),c.FullName,c.Phone,r.Name FROM dbo.Orders o JOIN dbo.Customers c ON c.CustomerId=o.CustomerId JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId WHERE c.Phone=@phone ORDER BY o.OrderedAt DESC;";
+        const string sql="SELECT o.OrderId,o.OrderCode,o.Status,o.PaymentMethod,o.DeliveryAddress,COALESCE(o.CustomerNote,N''),o.TotalAmount,COALESCE(o.ShippingFee,0),COALESCE(o.DiscountAmount,0),o.OrderedAt,COALESCE(o.UpdatedAt,o.OrderedAt),c.FullName,c.Phone,r.Name,COALESCE(o.CancelReason,N''),COALESCE(r.Phone,N''),sh.FullName,sh.Phone FROM dbo.Orders o JOIN dbo.Customers c ON c.CustomerId=o.CustomerId JOIN dbo.Restaurants r ON r.RestaurantId=o.RestaurantId LEFT JOIN dbo.Shippers sh ON sh.ShipperId=o.ShipperId WHERE c.Phone=@phone ORDER BY o.OrderedAt DESC;";
         await using var cmd=new SqlCommand(sql,cn);cmd.Parameters.AddWithValue("@phone",phone);
         await using var rd=await cmd.ExecuteReaderAsync();var rows=new List<(int DbId,CustomerOrderViewModel Order,string Shop)>();
         while(await rd.ReadAsync())
         {
             var total=rd.GetDecimal(6);var shipping=rd.GetDecimal(7);var discount=rd.GetDecimal(8);
-            rows.Add((rd.GetInt32(0),new CustomerOrderViewModel{Id=rd.GetString(1),Status=rd.GetString(2),PaymentMethod=rd.GetString(3),DeliveryAddress=rd.GetString(4),Note=rd.GetString(5),Total=total,ShippingFee=shipping,Discount=discount,Subtotal=total-shipping+discount,CreatedAt=rd.GetDateTime(9),UpdatedAt=rd.GetDateTime(10),CustomerName=rd.GetString(11),Phone=rd.GetString(12)},rd.GetString(13)));
+            rows.Add((rd.GetInt32(0),new CustomerOrderViewModel{Id=rd.GetString(1),Status=rd.GetString(2),PaymentMethod=rd.GetString(3),DeliveryAddress=rd.GetString(4),Note=rd.GetString(5),Total=total,ShippingFee=shipping,Discount=discount,Subtotal=total-shipping+discount,CreatedAt=rd.GetDateTime(9),UpdatedAt=rd.GetDateTime(10),CustomerName=rd.GetString(11),Phone=rd.GetString(12),CancelReason=rd.GetString(14),ShopName=rd.GetString(13),ShopPhone=rd.GetString(15),ShipperName=rd.IsDBNull(16)?null:rd.GetString(16),ShipperPhone=rd.IsDBNull(17)?null:rd.GetString(17)},rd.GetString(13)));
         }
         await rd.CloseAsync();
         foreach(var row in rows)

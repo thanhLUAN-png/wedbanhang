@@ -48,8 +48,13 @@ public sealed class CustomerOrderViewModel
     public string CustomerName { get; init; } = "";
     public string Phone { get; init; } = "";
     public string DeliveryAddress { get; init; } = "";
+    public string? CancelReason { get; init; }
     public string PaymentMethod { get; init; } = "cod";
     public string Note { get; init; } = "";
+    public string ShopName { get; init; } = "";
+    public string ShopPhone { get; init; } = "";
+    public string? ShipperName { get; init; }
+    public string? ShipperPhone { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
 }

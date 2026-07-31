@@ -1,14 +1,39 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
-import { ChevronRight, PackageOpen } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ChevronRight, PackageOpen, X } from "lucide-react";
 import { toast } from "sonner";
 import { statusLabel, statusColor, type Order, type OrderStatus } from "../../data/mockOrders";
+import { useCart } from "../../context/CartContext";
+import type { ShopProduct } from "../../data/mockShopProducts";
+
+function ConfirmDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void; }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+        <button onClick={onCancel} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-bold text-gray-900 mb-6">Bạn có muốn hủy đơn hàng này không?</h3>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            Đóng
+          </button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm">
+            Hủy đơn
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function formatVND(v: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
 }
 
-function OrderCard({ order, onCancel }: { order: Order; onCancel: (id: string) => void }) {
+function OrderCard({ order, onCancel, onReorder }: { order: Order; onCancel: (id: string) => void; onReorder: (order: Order) => void }) {
   const isCollapsible = order.status === "delivered" || order.status === "cancelled";
   const [isExpanded, setIsExpanded] = useState(!isCollapsible);
 
@@ -64,8 +89,9 @@ function OrderCard({ order, onCancel }: { order: Order; onCancel: (id: string) =
           ))}
 
           <div className="border-t border-gray-100 pt-4 flex flex-wrap items-center justify-between gap-4">
-            <div className="text-sm text-gray-500">
-              Thành tiền: <span className="text-lg font-bold text-orange-500 ml-1">{formatVND(order.total)}</span>
+            <div className="text-sm text-gray-500 flex flex-col gap-1">
+              {order.status === "cancelled" && order.cancelReason && <div className="text-red-500 font-medium">Lý do hủy: {order.cancelReason}</div>}
+              <div>Thành tiền: <span className="text-lg font-bold text-orange-500 ml-1">{formatVND(order.total)}</span></div>
             </div>
             <div className="flex items-center gap-3">
               {order.status === "pending" && (
@@ -76,8 +102,11 @@ function OrderCard({ order, onCancel }: { order: Order; onCancel: (id: string) =
                   Hủy đơn
                 </button>
               )}
-              {order.status === "delivered" && (
-                <button className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+              {(order.status === "delivered" || order.status === "cancelled") && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onReorder(order); }}
+                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                >
                   Mua lại
                 </button>
               )}
@@ -96,6 +125,8 @@ function OrderCard({ order, onCancel }: { order: Order; onCancel: (id: string) =
 }
 
 export default function OrdersPage() {
+  const navigate = useNavigate();
+  const { addItem, clearCart } = useCart();
   const [filter, setFilter] = useState<string>("all");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +148,10 @@ export default function OrdersPage() {
         items: order.items.map((item: any) => ({ ...item, id: String(item.id) })),
         subtotal: order.subtotal, shippingFee: order.shippingFee, discount: order.discount, total: order.total,
         address: { name: order.customerName, phone: order.phone, street: order.deliveryAddress, district: "", city: "" },
-        paymentMethod: order.paymentMethod, note: order.note, createdAt: order.createdAt, updatedAt: order.updatedAt
+        paymentMethod: order.paymentMethod, note: order.note, createdAt: order.createdAt, updatedAt: order.updatedAt,
+        cancelReason: order.cancelReason,
+        shopName: order.shopName, shopPhone: order.shopPhone,
+        shipperName: order.shipperName, shipperPhone: order.shipperPhone
       })));
     } catch { setLoadError("Không thể tải đơn hàng từ SQL Server."); }
     finally { setLoading(false); }
@@ -127,12 +161,53 @@ export default function OrdersPage() {
 
   const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
 
-  const cancelOrder = async (orderId: string) => {
-    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này không?")) return;
-    const response = await fetch(`/seller-api/customer/orders/${encodeURIComponent(orderId)}/cancel?phone=${encodeURIComponent(user.phone)}`, { method: "PUT" });
-    if (!response.ok) { toast.error("Không thể hủy đơn hàng."); return; }
+  const [cancelModal, setCancelModal] = useState<string | null>(null);
+
+  const cancelOrder = (orderId: string) => {
+    setCancelModal(orderId);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelModal) return;
+    const response = await fetch(`/seller-api/customer/orders/${encodeURIComponent(cancelModal)}/cancel?phone=${encodeURIComponent(user.phone)}`, { method: "PUT" });
+    if (!response.ok) { toast.error("Không thể hủy đơn hàng."); setCancelModal(null); return; }
     await loadOrders();
     toast.success("Đã hủy đơn hàng");
+    setCancelModal(null);
+  };
+
+  const reorderItems = async (order: Order) => {
+    try {
+      const res = await fetch("/seller-api/public/catalog");
+      const data = res.ok ? await res.json() : null;
+      const productsById = new Map<string, any>(data?.products?.map((p: any) => [`sql-product-${p.id}`, p]) ?? []);
+      clearCart();
+      let added = 0;
+      for (const item of order.items) {
+        const fresh: any = productsById.get(item.productId);
+        const product: ShopProduct = {
+          id: item.productId,
+          name: item.productName,
+          slug: item.productId,
+          price: item.price,
+          image: item.productImage || "",
+          images: [item.productImage || ""],
+          rating: 0, reviewCount: 0, sold: 0, stock: 99,
+          category: "", categoryId: "",
+          shopId: fresh ? `sql-shop-${fresh.shopId}` : "",
+          shopName: fresh?.shopName ?? item.shopName ?? "",
+          shopAvatar: fresh?.shopLogoUrl ?? "",
+          shopRating: Number(fresh?.shopRating ?? 0),
+          shopFollowers: 0,
+          restaurantId: fresh ? Number(fresh.shopId) : undefined,
+          description: "", specifications: [], tags: [],
+        };
+        addItem(product, item.quantity, item.variant ?? undefined);
+        added++;
+      }
+      if (added > 0) { toast.success("Đã thêm sản phẩm vào giỏ hàng!"); navigate("/cart"); }
+      else toast.error("Đơn hàng không có sản phẩm.");
+    } catch { toast.error("Không thể thêm vào giỏ hàng."); }
   };
 
   return (
@@ -174,11 +249,17 @@ export default function OrdersPage() {
             </div>
           ) : (
             filtered.map((order) => (
-              <OrderCard key={order.id} order={order} onCancel={cancelOrder} />
+              <OrderCard key={order.id} order={order} onCancel={cancelOrder} onReorder={reorderItems} />
             ))
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={cancelModal !== null}
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelModal(null)}
+      />
     </div>
   );
 }

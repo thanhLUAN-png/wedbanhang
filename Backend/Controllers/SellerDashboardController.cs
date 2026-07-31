@@ -32,7 +32,7 @@ public sealed class SellerDashboardController(SellerRepository repository) : Con
     [HttpPut("/seller-api/seller/orders/{id:int}/status")]
     public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] SellerOrderStatusRequest request, [FromQuery] string sellerCode = "SL-BT-0001")
     {
-        var updated = await repository.UpdateSellerOrderStatusAsync(sellerCode, id, request.Status);
+        var updated = await repository.UpdateSellerOrderStatusAsync(sellerCode, id, request.Status, request.CancelReason);
         return updated
             ? Ok(new { status = request.Status })
             : BadRequest(new { error = "Trạng thái đơn hàng đã thay đổi hoặc thao tác không hợp lệ." });
@@ -53,9 +53,21 @@ public sealed class SellerDashboardController(SellerRepository repository) : Con
     public async Task<IActionResult> AcceptShipperOrder(int id,[FromQuery] string phone)
         => await repository.AcceptShipperOrderAsync(id,phone) ? Ok() : BadRequest(new{error="Đơn đã có shipper nhận hoặc bạn đang giao đơn khác."});
 
+    [HttpGet("/seller-api/shipper/online-status")]
+    public async Task<IActionResult> GetShipperOnlineStatus([FromQuery] string phone)
+        => string.IsNullOrWhiteSpace(phone) ? BadRequest() : Ok(new { isOnline = await repository.GetShipperOnlineAsync(phone) });
+
+    [HttpPut("/seller-api/shipper/online-status")]
+    public async Task<IActionResult> SetShipperOnlineStatus([FromQuery] string phone, [FromBody] ShipperOnlineRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return BadRequest();
+        await repository.SetShipperOnlineAsync(phone, request.IsOnline);
+        return Ok(new { isOnline = request.IsOnline });
+    }
+
     [HttpPut("/seller-api/shipper/orders/{id:int}/status")]
     public async Task<IActionResult> UpdateShipperOrderStatus(int id,[FromBody] SellerOrderStatusRequest request,[FromQuery] string phone)
-        => await repository.UpdateShipperOrderStatusAsync(id,phone,request.Status) ? Ok() : BadRequest(new{error="Không thể cập nhật trạng thái đơn."});
+        => await repository.UpdateShipperOrderStatusAsync(id,phone,request.Status,request.CancelReason) ? Ok() : BadRequest(new{error="Không thể cập nhật trạng thái đơn."});
 
     [HttpGet("/seller-api/public/catalog")]
     public async Task<IActionResult> PublicCatalog()
@@ -123,7 +135,32 @@ public sealed class SellerDashboardController(SellerRepository repository) : Con
         error="";return true;
     }
     [HttpGet("/seller-api/seller/chat/participants")]
-    public async Task<IActionResult> ChatParticipants([FromQuery] string type="customer",[FromQuery] string sellerCode="SL-BT-0001") => Ok(await repository.GetChatParticipantsAsync(sellerCode,type));
+    public async Task<IActionResult> ChatParticipants([FromQuery] string type="customer",[FromQuery] string sellerCode="SL-BT-0001") => Ok(await repository.GetSellerChatParticipantsAsync(sellerCode,type));
+    
+    [HttpGet("/seller-api/seller/chat/{id:long}/messages")]
+    public async Task<IActionResult> GetSellerMessages(long id, [FromQuery] string type="customer") => Ok(await repository.GetMessagesAsync(id, "seller", type));
+
+    [HttpPost("/seller-api/seller/chat/{id:long}/messages")]
+    public async Task<IActionResult> SendSellerMessage(long id, [FromBody] SendMessageRequest request, [FromQuery] string type="customer")
+    {
+        if (string.IsNullOrWhiteSpace(request.Content)) return BadRequest();
+        await repository.SendMessageAsync(id, "seller", type, request.Content);
+        return Ok();
+    }
+
+    [HttpGet("/seller-api/shipper/chat/participants")]
+    public async Task<IActionResult> ShipperChatParticipants([FromQuery] string phone="0909123456") => Ok(await repository.GetShipperChatParticipantsAsync(phone));
+
+    [HttpGet("/seller-api/shipper/chat/{id:long}/messages")]
+    public async Task<IActionResult> GetShipperMessages(long id, [FromQuery] string type="customer") => Ok(await repository.GetMessagesAsync(id, "shipper", type));
+
+    [HttpPost("/seller-api/shipper/chat/{id:long}/messages")]
+    public async Task<IActionResult> SendShipperMessage(long id, [FromBody] SendMessageRequest request, [FromQuery] string type="customer")
+    {
+        if (string.IsNullOrWhiteSpace(request.Content)) return BadRequest();
+        await repository.SendMessageAsync(id, "shipper", type, request.Content);
+        return Ok();
+    }
     [HttpGet("/seller-api/seller/auto-activity")]
     public async Task<IActionResult> AutoActivity([FromQuery] string sellerCode="SL-BT-0001") => Ok(new { enabled=await repository.GetAutoActivityAsync(sellerCode) });
     [HttpPut("/seller-api/seller/auto-activity")]
@@ -161,8 +198,21 @@ public sealed class SellerDashboardController(SellerRepository repository) : Con
         return Ok(await repository.GetCustomerOrdersAsync(phone));
     }
     [HttpPut("/seller-api/customer/orders/{code}/cancel")]
-    public async Task<IActionResult> CancelCustomerOrder(string code,[FromQuery] string phone)
-        => await repository.CancelCustomerOrderAsync(code,phone)?Ok():BadRequest(new{error="Chỉ có thể hủy đơn đang chờ xác nhận."});
+    public async Task<IActionResult> CancelCustomerOrder(string code,[FromQuery] string phone="0901234567") => await repository.CancelCustomerOrderAsync(code,phone) ? Ok() : BadRequest(new{error="Chỉ có thể hủy đơn đang chờ xác nhận."});
+
+    [HttpGet("/seller-api/customer/chat/participants")]
+    public async Task<IActionResult> CustomerChatParticipants([FromQuery] string phone="0901234567") => Ok(await repository.GetCustomerChatParticipantsAsync(phone));
+
+    [HttpGet("/seller-api/customer/chat/{id:long}/messages")]
+    public async Task<IActionResult> GetCustomerMessages(long id, [FromQuery] string type="seller") => Ok(await repository.GetMessagesAsync(id, "customer", type));
+
+    [HttpPost("/seller-api/customer/chat/{id:long}/messages")]
+    public async Task<IActionResult> SendCustomerMessage(long id, [FromBody] SendMessageRequest request, [FromQuery] string type="seller")
+    {
+        if (string.IsNullOrWhiteSpace(request.Content)) return BadRequest();
+        await repository.SendMessageAsync(id, "customer", type, request.Content);
+        return Ok();
+    }
 
     private static bool HasValidToppings(string? toppingsJson, out string error)
     {
@@ -191,4 +241,5 @@ public sealed class SellerDashboardController(SellerRepository repository) : Con
 }
 
 public sealed class ActivityRequest { public bool IsActive { get; init; } }
-public sealed class SellerOrderStatusRequest { public string Status { get; init; } = ""; }
+public sealed class SellerOrderStatusRequest { public string Status { get; init; } = ""; public string? CancelReason { get; init; } }
+public sealed class ShipperOnlineRequest { public bool IsOnline { get; init; } }
